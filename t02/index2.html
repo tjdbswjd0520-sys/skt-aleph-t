@@ -1,0 +1,3754 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- 모바일에서도 화면 크기에 맞게 보이도록 설정 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>⚫ 바둑 활로 찾기 ⚪</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      background: linear-gradient(135deg, #f5f5f5, #dddddd);
+      color: #222;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 25px 12px 40px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 5px 0 10px;
+      font-size: clamp(25px, 5vw, 40px);
+    }
+
+    .description {
+      margin: 0 auto 20px;
+      line-height: 1.6;
+      font-size: 15px;
+      color: #555;
+    }
+
+    /* -------------------------
+       난이도 버튼
+    ------------------------- */
+
+    .difficulty-area {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    button,
+    select {
+      font-family: inherit;
+    }
+
+    .difficulty-button {
+      border: 1px solid #999;
+      background: white;
+      padding: 9px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: 0.15s;
+    }
+
+    .difficulty-button:hover {
+      background: #eeeeee;
+    }
+
+    .difficulty-button.active {
+      background: #222;
+      color: white;
+      border-color: #222;
+    }
+
+    .difficulty-button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .board-size-area {
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+
+    #boardSize {
+      margin-left: 5px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      border: 1px solid #aaa;
+      background: white;
+    }
+
+    #boardSize:disabled {
+      opacity: 0.5;
+    }
+
+    /* -------------------------
+       점수 정보
+    ------------------------- */
+
+    .info-area {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .info-box {
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 10px 5px;
+    }
+
+    .info-title {
+      display: block;
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+
+    .info-value {
+      font-size: 19px;
+      font-weight: bold;
+    }
+
+    #remainingTime.warning {
+      color: #d22;
+    }
+
+    /* -------------------------
+       바둑판
+    ------------------------- */
+
+    #board {
+      position: relative;
+      width: min(88vw, 650px);
+      aspect-ratio: 1 / 1;
+      margin: 0 auto;
+      background:
+        linear-gradient(
+          to bottom,
+          rgba(0, 0, 0, 0.03),
+          rgba(255, 255, 255, 0.03)
+        ),
+        #d8b56a;
+      border: 3px solid #9c7c3d;
+      border-radius: 5px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.18);
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+
+    .grid-line {
+      position: absolute;
+      background: #333;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .grid-line.horizontal {
+      left: 5%;
+      width: 90%;
+      height: 1px;
+    }
+
+    .grid-line.vertical {
+      top: 5%;
+      height: 90%;
+      width: 1px;
+    }
+
+    .star {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #222;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .stone {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      z-index: 5;
+      pointer-events: none;
+      box-shadow:
+        1px 2px 4px rgba(0, 0, 0, 0.35),
+        inset -2px -2px 3px rgba(0, 0, 0, 0.15);
+    }
+
+    .stone.black {
+      background: radial-gradient(
+        circle at 35% 30%,
+        #555,
+        #111 55%,
+        #000 100%
+      );
+    }
+
+    .stone.white {
+      background: radial-gradient(
+        circle at 35% 30%,
+        #ffffff,
+        #eeeeee 60%,
+        #cccccc 100%
+      );
+      border: 1px solid #aaa;
+    }
+
+    /*
+      클릭 영역은 돌보다 위에 있지만
+      실제 돌보다 조금 크게 만들어 모바일에서도
+      클릭하기 쉽게 한다.
+    */
+    .click-point {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      width: 7%;
+      height: 7%;
+      min-width: 25px;
+      min-height: 25px;
+      z-index: 10;
+      cursor: pointer;
+      background: transparent;
+    }
+
+    .click-point:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .click-point.correct-hint {
+      background: rgba(255, 255, 0, 0.45);
+      box-shadow: 0 0 12px rgba(255, 220, 0, 0.8);
+    }
+
+    /* -------------------------
+       게임 버튼
+    ------------------------- */
+
+    .game-controls {
+      margin-top: 18px;
+      min-height: 48px;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .main-button {
+      border: none;
+      border-radius: 9px;
+      padding: 11px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      background: #222;
+      color: white;
+      transition: 0.15s;
+    }
+
+    .main-button:hover {
+      transform: translateY(-1px);
+      opacity: 0.9;
+    }
+
+    .secondary-button {
+      border: 1px solid #888;
+      border-radius: 9px;
+      padding: 11px 22px;
+      font-size: 16px;
+      cursor: pointer;
+      background: white;
+      color: #222;
+    }
+
+    .secondary-button:hover {
+      background: #eeeeee;
+    }
+
+    #message {
+      min-height: 30px;
+      margin: 13px auto 5px;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    /* -------------------------
+       랭킹
+    ------------------------- */
+
+    #rankingSection {
+      margin: 28px auto 0;
+      width: min(94vw, 650px);
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 18px;
+    }
+
+    #rankingSection h2 {
+      margin: 0 0 12px;
+      font-size: 20px;
+    }
+
+    .ranking-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .ranking-table th,
+    .ranking-table td {
+      padding: 7px 5px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .ranking-table th {
+      color: #666;
+      font-size: 12px;
+    }
+
+    .ranking-empty {
+      color: #888;
+      padding: 15px;
+    }
+
+    /* -------------------------
+       결과 화면
+    ------------------------- */
+
+    #resultScreen {
+      display: none;
+      width: 100%;
+      max-width: 700px;
+      margin: 20px auto;
+    }
+
+    .result-card {
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 15px;
+      padding: 28px 18px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .result-card h2 {
+      margin-top: 0;
+      font-size: 28px;
+    }
+
+    .final-score {
+      font-size: 42px;
+      font-weight: bold;
+      margin: 18px 0;
+    }
+
+    .bonus-text {
+      font-size: 19px;
+      font-weight: bold;
+      margin: 12px 0;
+    }
+
+    .result-details {
+      line-height: 1.9;
+      color: #555;
+      margin-bottom: 20px;
+    }
+
+    /* -------------------------
+       난이도 변경 팝업
+    ------------------------- */
+
+    #promotionModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .modal-box {
+      width: min(90vw, 420px);
+      background: white;
+      border-radius: 14px;
+      padding: 25px 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-box h3 {
+      margin-top: 0;
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .modal-buttons button {
+      padding: 10px 25px;
+      border-radius: 8px;
+      border: 1px solid #aaa;
+      cursor: pointer;
+      background: white;
+    }
+
+    .modal-buttons .yes {
+      background: #222;
+      color: white;
+      border-color: #222;
+    }
+
+    /* -------------------------
+       모바일
+    ------------------------- */
+
+    @media (max-width: 600px) {
+      body {
+        padding-top: 15px;
+      }
+
+      .description {
+        font-size: 13px;
+        padding: 0 8px;
+      }
+
+      .info-area {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .info-value {
+        font-size: 17px;
+      }
+
+      #board {
+        width: min(94vw, 650px);
+      }
+
+      .game-controls .main-button,
+      .game-controls .secondary-button {
+        flex: 1;
+        min-width: 130px;
+      }
+
+      .final-score {
+        font-size: 34px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <!-- =========================
+         실제 게임 화면
+    ========================== -->
+    <div id="gameScreen">
+
+      <h1>⚫ 바둑 활로 찾기 ⚪</h1>
+
+      <p class="description">
+        단수에 몰린 백돌이 죽지 않도록<br>
+        백돌을 놓아야 하는 정확한 활로를 찾아 클릭하세요.
+      </p>
+
+      <!-- 난이도 -->
+      <div class="difficulty-area">
+        <button id="easyButton" class="difficulty-button active">
+          하
+        </button>
+
+        <button id="normalButton" class="difficulty-button">
+          중
+        </button>
+
+        <button id="hardButton" class="difficulty-button">
+          상
+        </button>
+      </div>
+
+      <!-- 바둑판 크기 -->
+      <div class="board-size-area">
+        바둑판 크기:
+        <select id="boardSize">
+          <option value="9">9 × 9</option>
+          <option value="13" selected>13 × 13</option>
+          <option value="19">19 × 19</option>
+        </select>
+      </div>
+
+      <!-- 게임 정보 -->
+      <div class="info-area">
+
+        <div class="info-box">
+          <span class="info-title">점수</span>
+          <span id="score" class="info-value">0</span>
+        </div>
+
+        <div class="info-box">
+          <span class="info-title">연속 성공</span>
+          <span id="streak" class="info-value">0</span>
+        </div>
+
+        <div class="info-box">
+          <span class="info-title">최고 연속</span>
+          <span id="bestStreak" class="info-value">0</span>
+        </div>
+
+        <div class="info-box">
+          <span class="info-title">성공 횟수</span>
+          <span id="solved" class="info-value">0</span>
+        </div>
+
+      </div>
+
+      <!-- 남은 시간 -->
+      <div style="margin-bottom: 10px;">
+        남은 시간:
+        <strong id="remainingTime">30.00</strong>초
+      </div>
+
+      <!-- 바둑판 -->
+      <div id="board"></div>
+
+      <!-- 메시지 -->
+      <div id="message">
+        게임 시작 버튼을 눌러 시작하세요.
+      </div>
+
+      <!-- 게임 컨트롤 -->
+      <div class="game-controls">
+
+        <!-- 시작 전 -->
+        <button id="startButton" class="main-button">
+          게임 시작
+        </button>
+
+        <!-- 게임 중 -->
+        <div id="runningControls" style="display: none; width: 100%; justify-content: center; gap: 8px; flex-wrap: wrap;">
+
+          <button id="resetButton" class="secondary-button">
+            초기화
+          </button>
+
+          <button id="pauseButton" class="secondary-button">
+            일시정지
+          </button>
+
+        </div>
+
+      </div>
+
+      <div style="margin-top: 10px; font-size: 14px; color: #666;">
+        최고 점수:
+        <strong id="highScore">0</strong>
+      </div>
+
+      <!-- 게임 화면 아래 랭킹 -->
+      <section id="rankingSection">
+        <h2>🏆 TOP 20 랭킹</h2>
+        <div id="rankingContent"></div>
+      </section>
+
+    </div>
+
+
+    <!-- =========================
+         최종 결과 화면
+    ========================== -->
+
+    <div id="resultScreen">
+
+      <div class="result-card">
+
+        <h2 id="resultTitle">
+          게임 종료
+        </h2>
+
+        <div id="resultReason">
+          게임이 종료되었습니다.
+        </div>
+
+        <div class="final-score">
+          <span id="finalScore">0</span>점
+        </div>
+
+        <div id="bonusText" class="bonus-text"></div>
+
+        <div class="result-details">
+          성공 횟수:
+          <strong id="finalSolved">0</strong>회
+          <br>
+
+          최고 연속 성공:
+          <strong id="finalBestStreak">0</strong>회
+          <br>
+
+          플레이 시간:
+          <strong id="finalTime">0.00</strong>초
+        </div>
+
+        <button id="restartButton" class="main-button">
+          다시 게임하기
+        </button>
+
+      </div>
+
+      <section id="rankingSectionResult" style="
+        margin: 25px auto 0;
+        width: min(94vw, 650px);
+        background: rgba(255,255,255,0.92);
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        padding: 18px;
+      ">
+        <h2 style="font-size:20px; margin-top:0;">
+          🏆 TOP 20 랭킹
+        </h2>
+
+        <div id="rankingContentResult"></div>
+      </section>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================
+       난이도 상승 팝업
+  ========================== -->
+
+  <div id="promotionModal">
+
+    <div class="modal-box">
+
+      <h3 id="promotionTitle">
+        다음 난이도로 넘어갈까요?
+      </h3>
+
+      <p id="promotionMessage">
+        10번 연속 성공했습니다.
+      </p>
+
+      <div class="modal-buttons">
+
+        <button id="promotionYes" class="yes">
+          예
+        </button>
+
+        <button id="promotionNo">
+          아니오
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <script>
+
+    /* =========================================================
+       기본 설정
+    ========================================================= */
+
+    const TIME_LIMIT = 30;
+
+    let BOARD_SIZE = 13;
+
+    let difficulty = "easy";
+
+    /*
+      난이도별 문제 설정
+
+      하:
+      흑돌 약 3개 / 백돌 1개
+
+      중:
+      흑돌 약 10개 / 백돌 약 4개
+
+      상:
+      흑돌 18개 / 백돌 12개 이상
+    */
+    const difficultySettings = {
+
+      easy: {
+        black: 3,
+        white: 1,
+        groupSize: 1
+      },
+
+      normal: {
+        black: 10,
+        white: 4,
+        groupSize: 3
+      },
+
+      hard: {
+        black: 18,
+        white: 12,
+        groupSizeMin: 5,
+        groupSizeMax: 9
+      }
+
+    };
+
+
+    /* =========================================================
+       게임 상태
+    ========================================================= */
+
+    let gameRunning = false;
+
+    let isPaused = false;
+
+    let promotionOpen = false;
+
+    /*
+      타이머 관련 변수
+
+      runElapsed:
+      이미 지나간 시간
+
+      runStartedAt:
+      현재 타이머가 다시 시작된 시각
+
+      중요한 점:
+      새로운 기보가 나와도 이 값을 초기화하지 않는다.
+      따라서 같은 난이도에서 문제를 계속 풀어도
+      30초 타이머가 계속 이어진다.
+    */
+    let runElapsed = 0;
+    let runStartedAt = 0;
+
+    let timer = null;
+
+    /* 현재 문제 */
+    let correctLiberty = null;
+    let targetGroup = [];
+
+    /* 바둑돌 */
+    let occupied = new Map();
+
+
+    /* 점수 */
+    let score = 0;
+    let streak = 0;
+    let bestStreak = 0;
+    let solved = 0;
+
+    /*
+      이번 게임에서 이미 랭킹을 저장했는지 확인
+      중복 저장을 방지한다.
+    */
+    let scoreSaved = false;
+
+    /*
+      상 난이도 10연속 성공 시 지급되는 보너스
+    */
+    let finalBonus = 0;
+
+
+    /* =========================================================
+       HTML 요소 가져오기
+    ========================================================= */
+
+    const board = document.getElementById("board");
+
+    const scoreElement = document.getElementById("score");
+    const streakElement = document.getElementById("streak");
+    const bestStreakElement = document.getElementById("bestStreak");
+    const solvedElement = document.getElementById("solved");
+    const remainingTimeElement = document.getElementById("remainingTime");
+
+    const messageElement = document.getElementById("message");
+
+    const startButton = document.getElementById("startButton");
+    const runningControls = document.getElementById("runningControls");
+
+    const resetButton = document.getElementById("resetButton");
+    const pauseButton = document.getElementById("pauseButton");
+
+    const boardSizeSelect = document.getElementById("boardSize");
+
+    const easyButton = document.getElementById("easyButton");
+    const normalButton = document.getElementById("normalButton");
+    const hardButton = document.getElementById("hardButton");
+
+    const highScoreElement = document.getElementById("highScore");
+
+    const promotionModal = document.getElementById("promotionModal");
+    const promotionTitle = document.getElementById("promotionTitle");
+    const promotionMessage = document.getElementById("promotionMessage");
+
+    const promotionYes = document.getElementById("promotionYes");
+    const promotionNo = document.getElementById("promotionNo");
+
+    const gameScreen = document.getElementById("gameScreen");
+    const resultScreen = document.getElementById("resultScreen");
+
+    const finalScoreElement = document.getElementById("finalScore");
+    const finalSolvedElement = document.getElementById("finalSolved");
+    const finalBestStreakElement = document.getElementById("finalBestStreak");
+    const finalTimeElement = document.getElementById("finalTime");
+
+    const resultReasonElement = document.getElementById("resultReason");
+    const bonusTextElement = document.getElementById("bonusText");
+
+    const restartButton = document.getElementById("restartButton");
+
+    const rankingContent = document.getElementById("rankingContent");
+    const rankingContentResult = document.getElementById("rankingContentResult");
+
+
+    /* =========================================================
+       유틸리티 함수
+    ========================================================= */
+
+    function cellKey(x, y) {
+      return `${x},${y}`;
+    }
+
+
+    function randomInteger(min, max) {
+      return Math.floor(
+        Math.random() * (max - min + 1)
+      ) + min;
+    }
+
+
+    function shuffle(array) {
+
+      const copied = [...array];
+
+      for (let i = copied.length - 1; i > 0; i--) {
+
+        const j = Math.floor(
+          Math.random() * (i + 1)
+        );
+
+        [copied[i], copied[j]] =
+          [copied[j], copied[i]];
+      }
+
+      return copied;
+    }
+
+
+    function isInside(x, y) {
+      return (
+        x >= 0 &&
+        x < BOARD_SIZE &&
+        y >= 0 &&
+        y < BOARD_SIZE
+      );
+    }
+
+
+    function neighbors(x, y) {
+
+      const result = [];
+
+      const directions = [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1]
+      ];
+
+      for (const [dx, dy] of directions) {
+
+        const nx = x + dx;
+        const ny = y + dy;
+
+        if (isInside(nx, ny)) {
+          result.push([nx, ny]);
+        }
+      }
+
+      return result;
+    }
+
+
+    function getPercent(index) {
+
+      if (BOARD_SIZE === 1) {
+        return 50;
+      }
+
+      return (
+        5 +
+        (index / (BOARD_SIZE - 1)) * 90
+      );
+    }
+
+
+    /* =========================================================
+       바둑판 그리기
+    ========================================================= */
+
+    function getStoneSize() {
+
+      if (BOARD_SIZE === 19) {
+        return 4.65;
+      }
+
+      if (BOARD_SIZE === 13) {
+        return 6.8;
+      }
+
+      return 7.2;
+    }
+
+
+    function drawBoard() {
+
+      board.innerHTML = "";
+
+      /*
+        가로선
+      */
+      for (let y = 0; y < BOARD_SIZE; y++) {
+
+        const line = document.createElement("div");
+
+        line.className = "grid-line horizontal";
+
+        line.style.top =
+          `${getPercent(y)}%`;
+
+        board.appendChild(line);
+      }
+
+
+      /*
+        세로선
+      */
+      for (let x = 0; x < BOARD_SIZE; x++) {
+
+        const line = document.createElement("div");
+
+        line.className = "grid-line vertical";
+
+        line.style.left =
+          `${getPercent(x)}%`;
+
+        board.appendChild(line);
+      }
+
+
+      /*
+        화점
+      */
+      let starIndexes = [];
+
+      if (BOARD_SIZE === 9) {
+
+        starIndexes = [2, 6];
+
+      } else if (BOARD_SIZE === 13) {
+
+        starIndexes = [3, 6, 9];
+
+      } else if (BOARD_SIZE === 19) {
+
+        starIndexes = [3, 9, 15];
+      }
+
+
+      for (const x of starIndexes) {
+
+        for (const y of starIndexes) {
+
+          /*
+            9×9에서는 가운데 화점도 표시
+            13×13, 19×19도 동일하게 표시
+          */
+
+          const star = document.createElement("div");
+
+          star.className = "star";
+
+          star.style.left =
+            `${getPercent(x)}%`;
+
+          star.style.top =
+            `${getPercent(y)}%`;
+
+          board.appendChild(star);
+        }
+      }
+
+
+      drawStones();
+
+      /*
+        게임 중일 때만 클릭 영역 생성
+      */
+      if (gameRunning && !isPaused) {
+        createClickPoints();
+      }
+    }
+
+
+    function drawStones() {
+
+      const stoneSize = getStoneSize();
+
+      for (const [key, color] of occupied) {
+
+        const [x, y] =
+          key.split(",").map(Number);
+
+        const stone =
+          document.createElement("div");
+
+        stone.className =
+          `stone ${color}`;
+
+        stone.style.width =
+          `${stoneSize}%`;
+
+        stone.style.height =
+          `${stoneSize}%`;
+
+        stone.style.left =
+          `${getPercent(x)}%`;
+
+        stone.style.top =
+          `${getPercent(y)}%`;
+
+        board.appendChild(stone);
+      }
+    }
+
+
+    function createClickPoints() {
+
+      for (let x = 0; x < BOARD_SIZE; x++) {
+
+        for (let y = 0; y < BOARD_SIZE; y++) {
+
+          /*
+            이미 돌이 있는 위치는 클릭할 필요가 없다.
+          */
+          if (occupied.has(cellKey(x, y))) {
+            continue;
+          }
+
+          const point =
+            document.createElement("div");
+
+          point.className = "click-point";
+
+          point.style.left =
+            `${getPercent(x)}%`;
+
+          point.style.top =
+            `${getPercent(y)}%`;
+
+          point.dataset.x = x;
+          point.dataset.y = y;
+
+          point.addEventListener(
+            "click",
+            handleBoardClick
+          );
+
+          board.appendChild(point);
+        }
+      }
+    }
+
+
+    /* =========================================================
+       바둑돌 배치 / 그룹 계산
+    ========================================================= */
+
+    function placeStone(x, y, color) {
+
+      if (!isInside(x, y)) {
+        return false;
+      }
+
+      const key = cellKey(x, y);
+
+      if (occupied.has(key)) {
+        return false;
+      }
+
+      occupied.set(key, color);
+
+      return true;
+    }
+
+
+    function getGroup(x, y) {
+
+      const startKey = cellKey(x, y);
+
+      if (!occupied.has(startKey)) {
+        return [];
+      }
+
+      const color =
+        occupied.get(startKey);
+
+      const group = [];
+
+      const visited = new Set();
+
+      const queue = [[x, y]];
+
+      visited.add(startKey);
+
+      while (queue.length > 0) {
+
+        const [cx, cy] =
+          queue.shift();
+
+        group.push([cx, cy]);
+
+        for (const [nx, ny] of neighbors(cx, cy)) {
+
+          const key =
+            cellKey(nx, ny);
+
+          if (
+            !visited.has(key) &&
+            occupied.get(key) === color
+          ) {
+
+            visited.add(key);
+
+            queue.push([nx, ny]);
+          }
+        }
+      }
+
+      return group;
+    }
+
+
+    function getGroupLiberties(group) {
+
+      const liberties = new Set();
+
+      for (const [x, y] of group) {
+
+        for (const [nx, ny] of neighbors(x, y)) {
+
+          const key =
+            cellKey(nx, ny);
+
+          if (!occupied.has(key)) {
+            liberties.add(key);
+          }
+        }
+      }
+
+      return Array.from(liberties)
+        .map(key =>
+          key.split(",").map(Number)
+        );
+    }
+
+
+    /* =========================================================
+       백돌 착수 가능 여부 확인
+    ========================================================= */
+
+    function isLegalWhiteMove(x, y) {
+
+      const key = cellKey(x, y);
+
+      if (occupied.has(key)) {
+        return false;
+      }
+
+      /*
+        임시로 백돌을 놓는다.
+      */
+      occupied.set(key, "white");
+
+      /*
+        주변에 있는 흑돌 중 활로가 0개가 된 그룹은
+        잡힌 것으로 간주한다.
+      */
+      for (const [nx, ny] of neighbors(x, y)) {
+
+        if (
+          occupied.get(cellKey(nx, ny)) === "black"
+        ) {
+
+          const blackGroup =
+            getGroup(nx, ny);
+
+          const liberties =
+            getGroupLiberties(blackGroup);
+
+          if (liberties.length === 0) {
+
+            /*
+              잡힌 흑돌을 임시로 제거한다.
+              실제 문제 생성에서는 필요하지 않지만
+              합법성 판단을 위해 사용한다.
+            */
+          }
+        }
+      }
+
+      /*
+        실제 착수 후 백 그룹의 활로를 확인하기 위해
+        잡힐 흑돌을 임시 제거한다.
+      */
+
+      const capturedKeys = [];
+
+      for (const [nx, ny] of neighbors(x, y)) {
+
+        if (
+          occupied.get(cellKey(nx, ny)) === "black"
+        ) {
+
+          const blackGroup =
+            getGroup(nx, ny);
+
+          const liberties =
+            getGroupLiberties(blackGroup);
+
+          if (liberties.length === 0) {
+
+            for (const [gx, gy] of blackGroup) {
+
+              const gKey =
+                cellKey(gx, gy);
+
+              capturedKeys.push([
+                gKey,
+                "black"
+              ]);
+
+              occupied.delete(gKey);
+            }
+          }
+        }
+      }
+
+      const whiteGroup =
+        getGroup(x, y);
+
+      const whiteLiberties =
+        getGroupLiberties(whiteGroup);
+
+      const legal =
+        whiteLiberties.length > 0 ||
+        capturedKeys.length > 0;
+
+      /*
+        원래 상태로 되돌린다.
+      */
+      occupied.delete(key);
+
+      for (const [restoreKey, color] of capturedKeys) {
+        occupied.set(restoreKey, color);
+      }
+
+      return legal;
+    }
+
+
+    /* =========================================================
+       연결된 그룹 생성
+    ========================================================= */
+
+    function createRandomConnectedGroup(size) {
+
+      for (let attempt = 0; attempt < 300; attempt++) {
+
+        const startX =
+          randomInteger(2, BOARD_SIZE - 3);
+
+        const startY =
+          randomInteger(2, BOARD_SIZE - 3);
+
+        const group = [
+          [startX, startY]
+        ];
+
+        const groupSet =
+          new Set([
+            cellKey(startX, startY)
+          ]);
+
+        while (group.length < size) {
+
+          const candidates = [];
+
+          for (const [x, y] of group) {
+
+            for (const [nx, ny] of neighbors(x, y)) {
+
+              const key =
+                cellKey(nx, ny);
+
+              if (
+                !groupSet.has(key) &&
+                !occupied.has(key)
+              ) {
+
+                candidates.push([nx, ny]);
+              }
+            }
+          }
+
+          if (candidates.length === 0) {
+            break;
+          }
+
+          const next =
+            candidates[
+              randomInteger(
+                0,
+                candidates.length - 1
+              )
+            ];
+
+          group.push(next);
+
+          groupSet.add(
+            cellKey(next[0], next[1])
+          );
+        }
+
+        if (group.length === size) {
+
+          return group;
+        }
+      }
+
+      return null;
+    }
+
+
+    /* =========================================================
+       상 난이도용 다양한 모양
+    ========================================================= */
+
+    const hardShapes = [
+
+      /* 일자 */
+      [
+        [0,0],
+        [1,0],
+        [2,0],
+        [3,0],
+        [4,0]
+      ],
+
+      /* L */
+      [
+        [0,0],
+        [0,1],
+        [0,2],
+        [1,2],
+        [2,2]
+      ],
+
+      /* 긴 L */
+      [
+        [0,0],
+        [0,1],
+        [0,2],
+        [0,3],
+        [1,3],
+        [2,3]
+      ],
+
+      /* T */
+      [
+        [0,0],
+        [1,0],
+        [2,0],
+        [1,1],
+        [1,2]
+      ],
+
+      /* + */
+      [
+        [1,0],
+        [0,1],
+        [1,1],
+        [2,1],
+        [1,2]
+      ],
+
+      /* 계단 */
+      [
+        [0,0],
+        [1,0],
+        [1,1],
+        [2,1],
+        [2,2],
+        [3,2]
+      ],
+
+      /* Z */
+      [
+        [0,0],
+        [1,0],
+        [1,1],
+        [2,1],
+        [2,2],
+        [3,2]
+      ],
+
+      /* U */
+      [
+        [0,0],
+        [0,1],
+        [0,2],
+        [1,2],
+        [2,2],
+        [2,1],
+        [2,0]
+      ],
+
+      /* 작은 덩어리 */
+      [
+        [0,0],
+        [1,0],
+        [0,1],
+        [1,1],
+        [2,1],
+        [1,2]
+      ],
+
+      /* 비대칭 */
+      [
+        [0,0],
+        [1,0],
+        [2,0],
+        [0,1],
+        [1,2],
+        [2,2],
+        [3,2]
+      ]
+
+    ];
+
+
+    function normalizeShape(shape) {
+
+      const minX =
+        Math.min(...shape.map(p => p[0]));
+
+      const minY =
+        Math.min(...shape.map(p => p[1]));
+
+      return shape.map(
+        ([x, y]) => [
+          x - minX,
+          y - minY
+        ]
+      );
+    }
+
+
+    function rotateShape(shape) {
+
+      return normalizeShape(
+        shape.map(
+          ([x, y]) => [-y, x]
+        )
+      );
+    }
+
+
+    function flipShape(shape) {
+
+      return normalizeShape(
+        shape.map(
+          ([x, y]) => [-x, y]
+        )
+      );
+    }
+
+
+    function getRandomHardShape() {
+
+      let shape =
+        hardShapes[
+          randomInteger(
+            0,
+            hardShapes.length - 1
+          )
+        ];
+
+      shape =
+        shape.map(p => [...p]);
+
+      const rotationCount =
+        randomInteger(0, 3);
+
+      for (
+        let i = 0;
+        i < rotationCount;
+        i++
+      ) {
+        shape = rotateShape(shape);
+      }
+
+      if (Math.random() < 0.5) {
+        shape = flipShape(shape);
+      }
+
+      return normalizeShape(shape);
+    }
+
+
+    /* =========================================================
+       상 난이도 백돌이 흑돌의 큰 집에 갇히는 것 방지
+    ========================================================= */
+
+    function isEmptyRegionConnectedToEdge(startX, startY) {
+
+      const startKey =
+        cellKey(startX, startY);
+
+      if (occupied.has(startKey)) {
+        return false;
+      }
+
+      const queue = [[startX, startY]];
+
+      const visited = new Set([startKey]);
+
+      while (queue.length > 0) {
+
+        const [x, y] =
+          queue.shift();
+
+        /*
+          빈 공간이 바둑판 가장자리까지
+          연결되어 있다면 흑돌의 집 안이 아니다.
+        */
+        if (
+          x === 0 ||
+          y === 0 ||
+          x === BOARD_SIZE - 1 ||
+          y === BOARD_SIZE - 1
+        ) {
+          return true;
+        }
+
+        for (const [nx, ny] of neighbors(x, y)) {
+
+          const key =
+            cellKey(nx, ny);
+
+          if (
+            !occupied.has(key) &&
+            !visited.has(key)
+          ) {
+
+            visited.add(key);
+
+            queue.push([nx, ny]);
+          }
+        }
+      }
+
+      return false;
+    }
+
+
+    function hasWhiteInsideBlackHouse() {
+
+      for (const [key, color] of occupied) {
+
+        if (color !== "white") {
+          continue;
+        }
+
+        const [x, y] =
+          key.split(",").map(Number);
+
+        const group =
+          getGroup(x, y);
+
+        /*
+          현재 단수 문제의 목표 그룹은
+          일부러 흑돌에 둘러싸여 있으므로 제외한다.
+        */
+        if (
+          targetGroup.length > 0 &&
+          group.some(
+            ([gx, gy]) =>
+              targetGroup.some(
+                ([tx, ty]) =>
+                  gx === tx && gy === ty
+              )
+          )
+        ) {
+          continue;
+        }
+
+        const liberties =
+          getGroupLiberties(group);
+
+        /*
+          활로가 하나도 없다면 이미 죽은 돌이므로
+          잘못된 기보로 판단한다.
+        */
+        if (liberties.length === 0) {
+          return true;
+        }
+
+        /*
+          백돌의 활로가 모두 가장자리로 연결되지 않은
+          하나의 닫힌 공간 안에 있다면
+          흑돌의 집에 갇힌 것으로 판단한다.
+        */
+        let connectedToEdge = false;
+
+        for (const [lx, ly] of liberties) {
+
+          if (
+            isEmptyRegionConnectedToEdge(
+              lx,
+              ly
+            )
+          ) {
+
+            connectedToEdge = true;
+            break;
+          }
+        }
+
+        if (!connectedToEdge) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+
+    /* =========================================================
+       목표 백 그룹 생성
+    ========================================================= */
+
+    function createTargetGroup() {
+
+      const settings =
+        difficultySettings[difficulty];
+
+      /*
+        상 난이도에서는 중앙의 열린 공간에
+        목표 그룹을 배치한다.
+
+        가장자리에서 최소 3칸 이상 떨어뜨려
+        흑돌의 큰 집에 들어간 것처럼 보이는
+        문제를 방지한다.
+      */
+
+      if (difficulty === "hard") {
+
+        for (let attempt = 0; attempt < 200; attempt++) {
+
+          const shape =
+            getRandomHardShape();
+
+          const maxX =
+            Math.max(...shape.map(p => p[0]));
+
+          const maxY =
+            Math.max(...shape.map(p => p[1]));
+
+          if (
+            maxX > BOARD_SIZE - 7 ||
+            maxY > BOARD_SIZE - 7
+          ) {
+            continue;
+          }
+
+          const baseX =
+            randomInteger(
+              3,
+              BOARD_SIZE - maxX - 4
+            );
+
+          const baseY =
+            randomInteger(
+              3,
+              BOARD_SIZE - maxY - 4
+            );
+
+          const group =
+            shape.map(
+              ([x, y]) => [
+                baseX + x,
+                baseY + y
+              ]
+            );
+
+          let valid = true;
+
+          for (const [x, y] of group) {
+
+            if (
+              !isInside(x, y) ||
+              occupied.has(cellKey(x, y))
+            ) {
+
+              valid = false;
+              break;
+            }
+          }
+
+          if (valid) {
+            return group;
+          }
+        }
+
+        return null;
+      }
+
+
+      /*
+        하 / 중
+      */
+
+      return createRandomConnectedGroup(
+        settings.groupSize
+      );
+    }
+
+
+    /* =========================================================
+       목표 주변에 흑돌을 배치하여 단수 만들기
+    ========================================================= */
+
+    function surroundTargetWithBlack(
+      group,
+      answer
+    ) {
+
+      const libertySet = new Set();
+
+      for (const [x, y] of group) {
+
+        for (const [nx, ny] of neighbors(x, y)) {
+
+          const key =
+            cellKey(nx, ny);
+
+          if (!occupied.has(key)) {
+            libertySet.add(key);
+          }
+        }
+      }
+
+      /*
+        정답 활로를 제외하고
+        나머지 활로를 흑돌로 막는다.
+      */
+      for (const libertyKey of libertySet) {
+
+        const [x, y] =
+          libertyKey.split(",").map(Number);
+
+        if (
+          x === answer[0] &&
+          y === answer[1]
+        ) {
+          continue;
+        }
+
+        occupied.set(
+          libertyKey,
+          "black"
+        );
+      }
+    }
+
+
+    /* =========================================================
+       목표 주변 거리 계산
+    ========================================================= */
+
+    function distanceFromGroup(x, y, group) {
+
+      let minDistance = Infinity;
+
+      for (const [gx, gy] of group) {
+
+        const distance =
+          Math.abs(x - gx) +
+          Math.abs(y - gy);
+
+        minDistance =
+          Math.min(
+            minDistance,
+            distance
+          );
+      }
+
+      return minDistance;
+    }
+
+
+    function isNearTarget(x, y, group) {
+
+      return (
+        distanceFromGroup(
+          x,
+          y,
+          group
+        ) <= 2
+      );
+    }
+
+
+    /* =========================================================
+       상 난이도용 추가 돌 배치
+    ========================================================= */
+
+    function addHardBackgroundStones() {
+
+      const settings =
+        difficultySettings.hard;
+
+      /*
+        목표 주변에는 추가 돌을 배치하지 않는다.
+        따라서 목표 백돌 주변은 "작은 단수 공간"으로만
+        남고, 그 바깥은 열린 형태가 된다.
+      */
+
+      const positions = [];
+
+      for (let x = 0; x < BOARD_SIZE; x++) {
+
+        for (let y = 0; y < BOARD_SIZE; y++) {
+
+          if (occupied.has(cellKey(x, y))) {
+            continue;
+          }
+
+          if (
+            isNearTarget(
+              x,
+              y,
+              targetGroup
+            )
+          ) {
+            continue;
+          }
+
+          positions.push([x, y]);
+        }
+      }
+
+
+      /*
+        위치를 랜덤하게 섞는다.
+      */
+      const shuffled =
+        shuffle(positions);
+
+
+      /*
+        흑돌 18개
+      */
+      let blackCount = 0;
+
+      for (const [x, y] of shuffled) {
+
+        if (
+          blackCount >=
+          settings.black
+        ) {
+          break;
+        }
+
+        if (occupied.has(cellKey(x, y))) {
+          continue;
+        }
+
+        /*
+          너무 가까운 곳은 다시 한 번 제외
+        */
+        if (
+          isNearTarget(
+            x,
+            y,
+            targetGroup
+          )
+        ) {
+          continue;
+        }
+
+        occupied.set(
+          cellKey(x, y),
+          "black"
+        );
+
+        blackCount++;
+      }
+
+
+      /*
+        백돌 12개
+      */
+
+      const whiteCandidates =
+        shuffle(
+          positions.filter(
+            ([x, y]) =>
+              !occupied.has(
+                cellKey(x, y)
+              )
+          )
+        );
+
+      let whiteCount = 0;
+
+      for (const [x, y] of whiteCandidates) {
+
+        if (
+          whiteCount >=
+          settings.white
+        ) {
+          break;
+        }
+
+        if (
+          isNearTarget(
+            x,
+            y,
+            targetGroup
+          )
+        ) {
+          continue;
+        }
+
+        occupied.set(
+          cellKey(x, y),
+          "white"
+        );
+
+        whiteCount++;
+      }
+
+      return {
+        blackCount,
+        whiteCount
+      };
+    }
+
+
+    /* =========================================================
+       일반 난이도 추가 돌 배치
+    ========================================================= */
+
+    function addNormalBackgroundStones() {
+
+      const settings =
+        difficultySettings[difficulty];
+
+      let blackCount = 0;
+      let whiteCount = 0;
+
+      const positions = [];
+
+      for (let x = 0; x < BOARD_SIZE; x++) {
+
+        for (let y = 0; y < BOARD_SIZE; y++) {
+
+          if (occupied.has(cellKey(x, y))) {
+            continue;
+          }
+
+          if (
+            isNearTarget(
+              x,
+              y,
+              targetGroup
+            )
+          ) {
+            continue;
+          }
+
+          positions.push([x, y]);
+        }
+      }
+
+
+      const shuffled =
+        shuffle(positions);
+
+
+      /*
+        필요한 흑돌 수
+      */
+      for (const [x, y] of shuffled) {
+
+        if (
+          blackCount >=
+          settings.black
+        ) {
+          break;
+        }
+
+        if (
+          !occupied.has(
+            cellKey(x, y)
+          )
+        ) {
+
+          occupied.set(
+            cellKey(x, y),
+            "black"
+          );
+
+          blackCount++;
+        }
+      }
+
+
+      /*
+        필요한 백돌 수
+      */
+      for (const [x, y] of shuffle(positions)) {
+
+        if (
+          whiteCount >=
+          settings.white
+        ) {
+          break;
+        }
+
+        if (
+          !occupied.has(
+            cellKey(x, y)
+          )
+        ) {
+
+          occupied.set(
+            cellKey(x, y),
+            "white"
+          );
+
+          whiteCount++;
+        }
+      }
+    }
+
+
+    /* =========================================================
+       문제 생성
+    ========================================================= */
+
+    function generateProblem() {
+
+      /*
+        여러 번 시도해서 조건을 만족하는
+        정상적인 문제만 만든다.
+      */
+
+      for (
+        let attempt = 0;
+        attempt < 1000;
+        attempt++
+      ) {
+
+        occupied.clear();
+
+        targetGroup = [];
+
+        correctLiberty = null;
+
+
+        /*
+          목표 백 그룹
+        */
+        const group =
+          createTargetGroup();
+
+        if (!group) {
+          continue;
+        }
+
+        targetGroup = group;
+
+        /*
+          목표 그룹을 먼저 백돌로 놓는다.
+        */
+        for (const [x, y] of group) {
+
+          occupied.set(
+            cellKey(x, y),
+            "white"
+          );
+        }
+
+
+        /*
+          현재 목표 그룹의 모든 활로
+        */
+        const originalLiberties =
+          getGroupLiberties(group);
+
+
+        /*
+          활로가 너무 적으면
+          단수 문제를 만들기 어렵다.
+        */
+        if (
+          originalLiberties.length < 2
+        ) {
+          continue;
+        }
+
+
+        /*
+          정답 활로 하나를 랜덤 선택
+        */
+        const answer =
+          originalLiberties[
+            randomInteger(
+              0,
+              originalLiberties.length - 1
+            )
+          ];
+
+        correctLiberty = answer;
+
+
+        /*
+          정답 이외의 활로를 흑돌로 막는다.
+        */
+        surroundTargetWithBlack(
+          group,
+          answer
+        );
+
+
+        /*
+          배경 돌 배치
+        */
+        if (difficulty === "hard") {
+
+          addHardBackgroundStones();
+
+        } else {
+
+          addNormalBackgroundStones();
+        }
+
+
+        /*
+          최종적으로 목표 백 그룹의 활로가
+          정확히 하나인지 확인
+        */
+        const finalGroup =
+          getGroup(
+            group[0][0],
+            group[0][1]
+          );
+
+        const finalLiberties =
+          getGroupLiberties(
+            finalGroup
+          );
+
+
+        if (
+          finalLiberties.length !== 1
+        ) {
+          continue;
+        }
+
+
+        const finalAnswer =
+          finalLiberties[0];
+
+
+        if (
+          finalAnswer[0] !== answer[0] ||
+          finalAnswer[1] !== answer[1]
+        ) {
+          continue;
+        }
+
+
+        /*
+          정답 위치에 백돌을 놓았을 때
+          실제로 살아남을 수 있는지도 확인
+        */
+        if (
+          !isLegalWhiteMove(
+            answer[0],
+            answer[1]
+          )
+        ) {
+          continue;
+        }
+
+
+        /*
+          돌 개수 확인
+        */
+        const blackCount =
+          [...occupied.values()]
+            .filter(c => c === "black")
+            .length;
+
+        const whiteCount =
+          [...occupied.values()]
+            .filter(c => c === "white")
+            .length;
+
+
+        if (
+          blackCount <
+          difficultySettings[difficulty].black
+        ) {
+          continue;
+        }
+
+
+        if (
+          whiteCount <
+          difficultySettings[difficulty].white
+        ) {
+          continue;
+        }
+
+
+        /*
+          상 난이도에서는
+          목표 그룹 이외의 백돌이
+          흑돌의 집에 갇혀 있지 않은지 검사한다.
+        */
+        if (
+          difficulty === "hard" &&
+          hasWhiteInsideBlackHouse()
+        ) {
+          continue;
+        }
+
+
+        /*
+          문제가 정상적으로 완성됨
+        */
+        return true;
+      }
+
+
+      /*
+        1000번 시도해도 실패한 경우
+        다시 문제를 만드는 대신
+        재귀적으로 한 번 더 시도한다.
+      */
+      return generateProblem();
+    }
+
+
+    /* =========================================================
+       게임 시간 계산
+    ========================================================= */
+
+    function getElapsedMilliseconds() {
+
+      if (!gameRunning) {
+        return runElapsed;
+      }
+
+      if (isPaused) {
+        return runElapsed;
+      }
+
+      return (
+        runElapsed +
+        (performance.now() - runStartedAt)
+      );
+    }
+
+
+    function getElapsedSeconds() {
+
+      return (
+        getElapsedMilliseconds() / 1000
+      );
+    }
+
+
+    function getRemainingSeconds() {
+
+      return Math.max(
+        0,
+        TIME_LIMIT -
+        getElapsedSeconds()
+      );
+    }
+
+
+    /* =========================================================
+       타이머 표시
+    ========================================================= */
+
+    function updateTimer() {
+
+      if (!gameRunning || isPaused) {
+        return;
+      }
+
+      const elapsed =
+        getElapsedSeconds();
+
+      const remaining =
+        Math.max(
+          0,
+          TIME_LIMIT - elapsed
+        );
+
+
+      remainingTimeElement.textContent =
+        remaining.toFixed(2);
+
+
+      if (remaining <= 10) {
+
+        remainingTimeElement.classList.add(
+          "warning"
+        );
+
+      } else {
+
+        remainingTimeElement.classList.remove(
+          "warning"
+        );
+      }
+
+
+      /*
+        30초가 되면 게임 종료
+      */
+      if (elapsed >= TIME_LIMIT) {
+
+        runElapsed =
+          TIME_LIMIT * 1000;
+
+        endGame("timeout");
+      }
+    }
+
+
+    function startTimer() {
+
+      clearInterval(timer);
+
+      timer =
+        setInterval(
+          updateTimer,
+          20
+        );
+
+      updateTimer();
+    }
+
+
+    function stopTimer() {
+
+      clearInterval(timer);
+
+      timer = null;
+    }
+
+
+    /* =========================================================
+       일시정지
+    ========================================================= */
+
+    function pauseGame() {
+
+      if (
+        !gameRunning ||
+        isPaused
+      ) {
+        return;
+      }
+
+
+      /*
+        지금까지의 시간을 저장한다.
+      */
+      runElapsed +=
+        performance.now() -
+        runStartedAt;
+
+      isPaused = true;
+
+      stopTimer();
+
+      pauseButton.textContent =
+        "계속하기";
+
+      messageElement.textContent =
+        "⏸ 게임이 일시정지되었습니다.";
+
+      drawBoard();
+    }
+
+
+    function resumeGame() {
+
+      if (
+        !gameRunning ||
+        !isPaused
+      ) {
+        return;
+      }
+
+
+      /*
+        지금부터 다시 시간을 센다.
+      */
+      runStartedAt =
+        performance.now();
+
+      isPaused = false;
+
+      pauseButton.textContent =
+        "일시정지";
+
+      messageElement.textContent =
+        "문제의 활로를 찾아보세요!";
+
+      drawBoard();
+
+      startTimer();
+    }
+
+
+    /* =========================================================
+       게임 시작
+    ========================================================= */
+
+    function startGame() {
+
+      /*
+        새로운 게임이므로 점수 등을 초기화
+      */
+      score = 0;
+      streak = 0;
+      bestStreak = 0;
+      solved = 0;
+
+      finalBonus = 0;
+
+      scoreSaved = false;
+
+      updateScoreDisplay();
+
+
+      /*
+        타이머 시작
+      */
+      runElapsed = 0;
+
+      runStartedAt =
+        performance.now();
+
+      gameRunning = true;
+
+      isPaused = false;
+
+      promotionOpen = false;
+
+
+      /*
+        시작 버튼을 숨기고
+        초기화 / 일시정지 버튼을 보여준다.
+      */
+      startButton.style.display =
+        "none";
+
+      runningControls.style.display =
+        "flex";
+
+
+      resultScreen.style.display =
+        "none";
+
+      gameScreen.style.display =
+        "block";
+
+
+      /*
+        첫 문제 생성
+      */
+      generateProblem();
+
+      drawBoard();
+
+      messageElement.textContent =
+        "문제의 활로를 찾아보세요!";
+
+      startTimer();
+    }
+
+
+    /* =========================================================
+       문제 클릭
+    ========================================================= */
+
+    function handleBoardClick(event) {
+
+      if (
+        !gameRunning ||
+        isPaused ||
+        promotionOpen
+      ) {
+        return;
+      }
+
+
+      const x =
+        Number(event.currentTarget.dataset.x);
+
+      const y =
+        Number(event.currentTarget.dataset.y);
+
+
+      /*
+        정답인지 확인
+      */
+      if (
+        x === correctLiberty[0] &&
+        y === correctLiberty[1]
+      ) {
+
+        handleCorrectAnswer(
+          x,
+          y
+        );
+
+      } else {
+
+        /*
+          오답을 클릭하면 점수나 시간을
+          변화시키지 않고 다시 시도한다.
+        */
+        messageElement.textContent =
+          "❌ 그곳은 정답이 아닙니다. 다시 찾아보세요.";
+
+        event.currentTarget.style.background =
+          "rgba(255, 80, 80, 0.3)";
+
+        setTimeout(() => {
+
+          if (
+            event.currentTarget &&
+            event.currentTarget.parentNode
+          ) {
+
+            event.currentTarget.style.background =
+              "";
+          }
+
+        }, 300);
+      }
+    }
+
+
+    /* =========================================================
+       정답 처리
+    ========================================================= */
+
+    function handleCorrectAnswer(x, y) {
+
+      /*
+        현재까지 사용한 시간을 기록
+        문제마다 타이머를 초기화하지 않는다.
+      */
+      const elapsed =
+        getElapsedSeconds();
+
+      const remaining =
+        Math.max(
+          0,
+          TIME_LIMIT - elapsed
+        );
+
+
+      /*
+        백돌을 정답 위치에 놓는다.
+      */
+      occupied.set(
+        cellKey(x, y),
+        "white"
+      );
+
+
+      solved++;
+      streak++;
+
+      bestStreak =
+        Math.max(
+          bestStreak,
+          streak
+        );
+
+
+      /*
+        기본 점수
+
+        빠르게 성공할수록 조금 더 높은 점수
+        연속 성공에도 보너스를 준다.
+      */
+      const timeBonus =
+        Math.floor(
+          remaining * 5
+        );
+
+      const streakBonus =
+        streak * 20;
+
+      const problemScore =
+        100 +
+        timeBonus +
+        streakBonus;
+
+
+      score += problemScore;
+
+
+      updateScoreDisplay();
+
+      drawBoard();
+
+
+      messageElement.textContent =
+        `⭕ 정답! +${problemScore}점`;
+
+
+      /* =====================================================
+         상 난이도
+         
+         10연속 성공하면 여기서 바로 종료한다.
+         ===================================================== */
+
+      if (
+        difficulty === "hard" &&
+        streak >= 10
+      ) {
+
+        /*
+          상 난이도 10연속 성공 시
+          남은 시간을 이용한 특별 보너스.
+
+          남은 1초당 20점.
+          
+          예:
+          30초 제한
+          18초에 10연속 성공
+          남은 시간 = 12초
+          보너스 = 12 × 20 = 240점
+        */
+
+        finalBonus =
+          Math.floor(
+            remaining * 20
+          );
+
+
+        score += finalBonus;
+
+
+        /*
+          점수 화면 업데이트
+        */
+        updateScoreDisplay();
+
+
+        /*
+          약간의 딜레이 후 최종 결과 화면
+        */
+        setTimeout(() => {
+
+          if (gameRunning) {
+
+            endGame(
+              "hard10",
+              finalBonus
+            );
+          }
+
+        }, 600);
+
+        return;
+      }
+
+
+      /* =====================================================
+         하 / 중 난이도
+         
+         10연속 성공하면 다음 난이도로 넘어갈지 질문
+         ===================================================== */
+
+      if (
+        streak >= 10 &&
+        (
+          difficulty === "easy" ||
+          difficulty === "normal"
+        )
+      ) {
+
+        setTimeout(() => {
+
+          if (gameRunning) {
+            showPromotionModal();
+          }
+
+        }, 500);
+
+        return;
+      }
+
+
+      /*
+        다음 문제
+
+        중요:
+        여기에서는 runStartedAt / runElapsed를
+        초기화하지 않는다.
+
+        따라서 같은 난이도에서
+        새로운 기보가 나와도
+        30초 타이머가 계속 이어진다.
+      */
+      setTimeout(() => {
+
+        if (
+          gameRunning &&
+          !isPaused
+        ) {
+
+          generateProblem();
+
+          drawBoard();
+
+          messageElement.textContent =
+            "다음 문제입니다! 활로를 찾아보세요.";
+        }
+
+      }, 500);
+    }
+
+
+    /* =========================================================
+       점수 표시
+    ========================================================= */
+
+    function updateScoreDisplay() {
+
+      scoreElement.textContent =
+        score;
+
+      streakElement.textContent =
+        streak;
+
+      bestStreakElement.textContent =
+        bestStreak;
+
+      solvedElement.textContent =
+        solved;
+    }
+
+
+    /* =========================================================
+       난이도 변경
+    ========================================================= */
+
+    function setDifficulty(newDifficulty) {
+
+      difficulty =
+        newDifficulty;
+
+
+      easyButton.classList.toggle(
+        "active",
+        difficulty === "easy"
+      );
+
+      normalButton.classList.toggle(
+        "active",
+        difficulty === "normal"
+      );
+
+      hardButton.classList.toggle(
+        "active",
+        difficulty === "hard"
+      );
+
+
+      /*
+        상 난이도는 무조건 19×19
+      */
+      if (
+        difficulty === "hard"
+      ) {
+
+        BOARD_SIZE = 19;
+
+        boardSizeSelect.value =
+          "19";
+
+        boardSizeSelect.disabled =
+          true;
+
+      } else {
+
+        boardSizeSelect.disabled =
+          false;
+
+        BOARD_SIZE =
+          Number(
+            boardSizeSelect.value
+          );
+      }
+
+
+      /*
+        현재 게임 중에 난이도를 직접 바꾸면
+        현재 게임을 끝내고 새 게임을 시작해야 한다.
+      */
+      if (gameRunning) {
+
+        stopTimer();
+
+        gameRunning = false;
+
+        isPaused = false;
+
+        promotionOpen = false;
+
+        promotionModal.style.display =
+          "none";
+
+        /*
+          새로운 난이도로
+          새 게임을 시작한다.
+        */
+        startGame();
+
+        return;
+      }
+
+
+      occupied.clear();
+
+      drawBoard();
+
+      messageElement.textContent =
+        `${getDifficultyName()} 난이도입니다. 게임을 시작하세요.`;
+    }
+
+
+    function getDifficultyName() {
+
+      if (difficulty === "easy") {
+        return "하";
+      }
+
+      if (difficulty === "normal") {
+        return "중";
+      }
+
+      return "상";
+    }
+
+
+    /* =========================================================
+       바둑판 크기 변경
+    ========================================================= */
+
+    boardSizeSelect.addEventListener(
+      "change",
+      () => {
+
+        if (difficulty === "hard") {
+
+          boardSizeSelect.value =
+            "19";
+
+          return;
+        }
+
+        BOARD_SIZE =
+          Number(
+            boardSizeSelect.value
+          );
+
+        occupied.clear();
+
+        drawBoard();
+
+        messageElement.textContent =
+          `${BOARD_SIZE}×${BOARD_SIZE} 바둑판입니다. 게임을 시작하세요.`;
+      }
+    );
+
+
+    /* =========================================================
+       난이도 버튼 이벤트
+    ========================================================= */
+
+    easyButton.addEventListener(
+      "click",
+      () => {
+        setDifficulty("easy");
+      }
+    );
+
+
+    normalButton.addEventListener(
+      "click",
+      () => {
+        setDifficulty("normal");
+      }
+    );
+
+
+    hardButton.addEventListener(
+      "click",
+      () => {
+        setDifficulty("hard");
+      }
+    );
+
+
+    /* =========================================================
+       시작 버튼
+    ========================================================= */
+
+    startButton.addEventListener(
+      "click",
+      () => {
+        startGame();
+      }
+    );
+
+
+    /* =========================================================
+       초기화 버튼
+    ========================================================= */
+
+    resetButton.addEventListener(
+      "click",
+      () => {
+
+        resetToReady();
+
+      }
+    );
+
+
+    /* =========================================================
+       일시정지 버튼
+    ========================================================= */
+
+    pauseButton.addEventListener(
+      "click",
+      () => {
+
+        if (isPaused) {
+
+          resumeGame();
+
+        } else {
+
+          pauseGame();
+        }
+
+      }
+    );
+
+
+    /* =========================================================
+       게임 초기화
+    ========================================================= */
+
+    function resetToReady() {
+
+      stopTimer();
+
+      gameRunning = false;
+
+      isPaused = false;
+
+      promotionOpen = false;
+
+      promotionModal.style.display =
+        "none";
+
+
+      score = 0;
+      streak = 0;
+      bestStreak = 0;
+      solved = 0;
+      finalBonus = 0;
+
+      runElapsed = 0;
+      runStartedAt = 0;
+
+      correctLiberty = null;
+      targetGroup = [];
+
+      occupied.clear();
+
+
+      startButton.style.display =
+        "inline-block";
+
+      runningControls.style.display =
+        "none";
+
+      pauseButton.textContent =
+        "일시정지";
+
+
+      remainingTimeElement.textContent =
+        TIME_LIMIT.toFixed(2);
+
+      remainingTimeElement.classList.remove(
+        "warning"
+      );
+
+
+      updateScoreDisplay();
+
+      drawBoard();
+
+
+      messageElement.textContent =
+        "게임 시작 버튼을 눌러 시작하세요.";
+    }
+
+
+    /* =========================================================
+       난이도 상승 팝업
+    ========================================================= */
+
+    function showPromotionModal() {
+
+      /*
+        팝업이 열리는 동안에는 시간이 흐르지 않도록
+        타이머를 일시정지한다.
+      */
+      if (
+        !gameRunning ||
+        promotionOpen
+      ) {
+        return;
+      }
+
+
+      /*
+        현재까지의 시간을 저장
+      */
+      runElapsed +=
+        performance.now() -
+        runStartedAt;
+
+      isPaused = true;
+
+      stopTimer();
+
+      promotionOpen = true;
+
+
+      if (difficulty === "easy") {
+
+        promotionTitle.textContent =
+          "중 난이도로 넘어갈까요?";
+
+        promotionMessage.textContent =
+          "하 난이도에서 10번 연속 성공했습니다.";
+
+      } else {
+
+        promotionTitle.textContent =
+          "상 난이도로 넘어갈까요?";
+
+        promotionMessage.textContent =
+          "중 난이도에서 10번 연속 성공했습니다.";
+      }
+
+
+      promotionModal.style.display =
+        "flex";
+    }
+
+
+    /* =========================================================
+       다음 난이도로 이동
+    ========================================================= */
+
+    promotionYes.addEventListener(
+      "click",
+      () => {
+
+        promotionModal.style.display =
+          "none";
+
+        promotionOpen = false;
+
+
+        if (difficulty === "easy") {
+
+          difficulty = "normal";
+
+        } else if (difficulty === "normal") {
+
+          difficulty = "hard";
+
+        } else {
+
+          return;
+        }
+
+
+        /*
+          난이도 버튼 표시 변경
+        */
+        easyButton.classList.toggle(
+          "active",
+          difficulty === "easy"
+        );
+
+        normalButton.classList.toggle(
+          "active",
+          difficulty === "normal"
+        );
+
+        hardButton.classList.toggle(
+          "active",
+          difficulty === "hard"
+        );
+
+
+        /*
+          상 난이도는 19×19로 강제
+        */
+        if (difficulty === "hard") {
+
+          BOARD_SIZE = 19;
+
+          boardSizeSelect.value =
+            "19";
+
+          boardSizeSelect.disabled =
+            true;
+
+        } else {
+
+          boardSizeSelect.disabled =
+            false;
+
+          BOARD_SIZE =
+            Number(
+              boardSizeSelect.value
+            );
+        }
+
+
+        /*
+          다음 난이도로 올라가면
+          새 난이도 게임을 시작한다.
+
+          사용자가 요청한 조건은
+          "같은 난이도에서 새 기보가 나올 때"
+          타이머가 초기화되지 않는 것이므로,
+          난이도가 올라가는 경우에는
+          새 난이도의 30초를 시작한다.
+        */
+        score = score;
+        streak = 0;
+        finalBonus = 0;
+
+        runElapsed = 0;
+
+        runStartedAt =
+          performance.now();
+
+        isPaused = false;
+
+        gameRunning = true;
+
+        startButton.style.display =
+          "none";
+
+        runningControls.style.display =
+          "flex";
+
+        generateProblem();
+
+        drawBoard();
+
+        messageElement.textContent =
+          `${getDifficultyName()} 난이도 시작!`;
+
+        startTimer();
+
+      }
+    );
+
+
+    /* =========================================================
+       난이도 상승 거절
+    ========================================================= */
+
+    promotionNo.addEventListener(
+      "click",
+      () => {
+
+        promotionModal.style.display =
+          "none";
+
+        promotionOpen = false;
+
+        /*
+          10연속 성공 상태에서
+          게임 종료
+        */
+        endGame(
+          "promotionNo",
+          0
+        );
+      }
+    );
+
+
+    /* =========================================================
+       게임 종료
+    ========================================================= */
+
+    function endGame(reason, bonus = 0) {
+
+      if (!gameRunning) {
+        return;
+      }
+
+
+      /*
+        게임이 진행 중이었다면
+        마지막으로 지난 시간을 저장한다.
+      */
+      if (!isPaused) {
+
+        runElapsed +=
+          performance.now() -
+          runStartedAt;
+      }
+
+
+      /*
+        30초 제한
+      */
+      if (reason === "timeout") {
+
+        runElapsed =
+          TIME_LIMIT * 1000;
+      }
+
+
+      gameRunning = false;
+
+      isPaused = false;
+
+      promotionOpen = false;
+
+      stopTimer();
+
+
+      /*
+        최종 보너스 저장
+      */
+      finalBonus = bonus;
+
+
+      /*
+        최고 점수 갱신
+      */
+      const savedHighScore =
+        Number(
+          localStorage.getItem(
+            "badukHighScore"
+          ) || 0
+        );
+
+      if (score > savedHighScore) {
+
+        localStorage.setItem(
+          "badukHighScore",
+          score
+        );
+      }
+
+
+      updateHighScore();
+
+
+      /*
+        랭킹 저장
+      */
+      saveRankingScore();
+
+
+      /*
+        최종 결과 화면 표시
+      */
+      showResultScreen(reason);
+
+
+      /*
+        게임판 클릭 제거
+        최종 상태를 보여주기 위해 그대로 돌은 표시한다.
+      */
+      drawBoard();
+    }
+
+
+    /* =========================================================
+       최종 결과 화면
+    ========================================================= */
+
+    function showResultScreen(reason) {
+
+      gameScreen.style.display =
+        "none";
+
+      resultScreen.style.display =
+        "block";
+
+
+      finalScoreElement.textContent =
+        score;
+
+      finalSolvedElement.textContent =
+        solved;
+
+      finalBestStreakElement.textContent =
+        bestStreak;
+
+      finalTimeElement.textContent =
+        Math.min(
+          TIME_LIMIT,
+          getElapsedSeconds()
+        ).toFixed(2);
+
+
+      /*
+        종료 이유별 문구
+      */
+
+      if (reason === "hard10") {
+
+        document.getElementById(
+          "resultTitle"
+        ).textContent =
+          "🎉 상 난이도 클리어!";
+
+        resultReasonElement.textContent =
+          "상 난이도에서 10번 연속 성공하여 게임을 종료했습니다.";
+
+        bonusTextElement.textContent =
+          `⏱ 남은 시간 보너스 +${finalBonus}점`;
+
+      } else if (reason === "timeout") {
+
+        document.getElementById(
+          "resultTitle"
+        ).textContent =
+          "⏰ 시간 종료";
+
+        resultReasonElement.textContent =
+          "30초가 지나 게임이 종료되었습니다.";
+
+        bonusTextElement.textContent =
+          "";
+
+      } else if (reason === "promotionNo") {
+
+        document.getElementById(
+          "resultTitle"
+        ).textContent =
+          "게임 종료";
+
+        resultReasonElement.textContent =
+          "게임을 종료했습니다.";
+
+        bonusTextElement.textContent =
+          "";
+
+      } else {
+
+        document.getElementById(
+          "resultTitle"
+        ).textContent =
+          "게임 종료";
+
+        resultReasonElement.textContent =
+          "게임이 종료되었습니다.";
+
+        bonusTextElement.textContent =
+          "";
+      }
+
+
+      renderRanking();
+    }
+
+
+    /* =========================================================
+       다시 게임하기
+    ========================================================= */
+
+    restartButton.addEventListener(
+      "click",
+      () => {
+
+        /*
+          결과 화면에서 게임 화면으로 돌아온다.
+        */
+        resultScreen.style.display =
+          "none";
+
+        gameScreen.style.display =
+          "block";
+
+        resetToReady();
+      }
+    );
+
+
+    /* =========================================================
+       최고 점수
+    ========================================================= */
+
+    function updateHighScore() {
+
+      const highScore =
+        Number(
+          localStorage.getItem(
+            "badukHighScore"
+          ) || 0
+        );
+
+      highScoreElement.textContent =
+        highScore;
+    }
+
+
+    /* =========================================================
+       랭킹 저장
+    ========================================================= */
+
+    const RANKING_KEY =
+      "badukRanking";
+
+
+    function getRanking() {
+
+      try {
+
+        const data =
+          JSON.parse(
+            localStorage.getItem(
+              RANKING_KEY
+            ) || "[]"
+          );
+
+        if (Array.isArray(data)) {
+          return data;
+        }
+
+      } catch (error) {
+
+        console.error(
+          "랭킹 데이터를 읽을 수 없습니다.",
+          error
+        );
+      }
+
+      return [];
+    }
+
+
+    function saveRankingScore() {
+
+      /*
+        이미 저장했다면 다시 저장하지 않는다.
+      */
+      if (scoreSaved) {
+        return;
+      }
+
+      scoreSaved = true;
+
+
+      /*
+        이름 입력
+      */
+      let playerName =
+        prompt(
+          "랭킹에 표시할 이름을 입력하세요.",
+          "익명"
+        );
+
+
+      /*
+        취소를 누르면 익명 처리
+      */
+      if (
+        playerName === null ||
+        playerName.trim() === ""
+      ) {
+
+        playerName = "익명";
+      }
+
+
+      playerName =
+        playerName.trim()
+          .substring(0, 20);
+
+
+      const ranking =
+        getRanking();
+
+
+      ranking.push({
+
+        name: playerName,
+
+        score: score,
+
+        date: Date.now()
+
+      });
+
+
+      /*
+        점수 높은 순으로 정렬
+      */
+      ranking.sort(
+        (a, b) => {
+
+          if (
+            b.score !== a.score
+          ) {
+
+            return b.score - a.score;
+          }
+
+          return a.date - b.date;
+        }
+      );
+
+
+      /*
+        너무 많은 데이터가 쌓이지 않도록
+        최대 100개만 저장
+      */
+      const limited =
+        ranking.slice(0, 100);
+
+
+      localStorage.setItem(
+        RANKING_KEY,
+        JSON.stringify(limited)
+      );
+
+
+      renderRanking();
+    }
+
+
+    /* =========================================================
+       HTML 특수문자 방지
+    ========================================================= */
+
+    function escapeHTML(text) {
+
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+
+    /* =========================================================
+       랭킹 출력
+    ========================================================= */
+
+    function createRankingHTML() {
+
+      const ranking =
+        getRanking()
+          .sort(
+            (a, b) => {
+
+              if (
+                b.score !== a.score
+              ) {
+
+                return b.score - a.score;
+              }
+
+              return (
+                (a.date || 0) -
+                (b.date || 0)
+              );
+            }
+          )
+          .slice(0, 20);
+
+
+      if (ranking.length === 0) {
+
+        return `
+          <div class="ranking-empty">
+            아직 등록된 점수가 없습니다.
+          </div>
+        `;
+      }
+
+
+      let html = `
+
+        <table class="ranking-table">
+
+          <thead>
+
+            <tr>
+              <th>순위</th>
+              <th>이름</th>
+              <th>점수</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+      `;
+
+
+      ranking.forEach(
+        (entry, index) => {
+
+          html += `
+
+            <tr>
+
+              <td>
+                ${index + 1}
+              </td>
+
+              <td>
+                ${escapeHTML(
+                  entry.name || "익명"
+                )}
+              </td>
+
+              <td>
+                <strong>
+                  ${Number(
+                    entry.score || 0
+                  ).toLocaleString()}
+                </strong>
+              </td>
+
+            </tr>
+          `;
+        }
+      );
+
+
+      html += `
+
+          </tbody>
+
+        </table>
+      `;
+
+
+      return html;
+    }
+
+
+    function renderRanking() {
+
+      const html =
+        createRankingHTML();
+
+
+      rankingContent.innerHTML =
+        html;
+
+      rankingContentResult.innerHTML =
+        html;
+    }
+
+
+    /* =========================================================
+       초기 화면
+    ========================================================= */
+
+    updateHighScore();
+
+    updateScoreDisplay();
+
+    renderRanking();
+
+    drawBoard();
+
+  </script>
+
+</body>
+</html>
