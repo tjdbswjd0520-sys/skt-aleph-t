@@ -1,0 +1,570 @@
+/* =========================
+   기본 설정
+========================= */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+
+  margin: 0;
+
+  min-height: 100vh;
+
+  font-family:
+    Arial,
+    "Malgun Gothic",
+    sans-serif;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f4f4f4,
+      #dedede
+    );
+
+  color: #222;
+
+}
+
+
+/* =========================
+   화면 공통
+========================= */
+
+.screen {
+
+  width: 100%;
+
+  max-width: 900px;
+
+  margin: 0 auto;
+
+  padding: 30px 20px;
+
+  text-align: center;
+
+}
+
+
+.hidden {
+
+  display: none !important;
+
+}
+
+
+h1 {
+
+  margin-bottom: 30px;
+
+}
+
+
+h2 {
+
+  margin-top: 15px;
+
+}
+
+
+/* =========================
+   입력창
+========================= */
+
+input {
+
+  width: 100%;
+
+  max-width: 350px;
+
+  padding: 14px;
+
+  margin: 8px 0;
+
+  border: 1px solid #aaa;
+
+  border-radius: 8px;
+
+  font-size: 16px;
+
+  text-align: center;
+
+}
+
+
+/* =========================
+   버튼
+========================= */
+
+button {
+
+  border: none;
+
+  border-radius: 8px;
+
+  padding: 13px 22px;
+
+  margin: 8px;
+
+  font-size: 16px;
+
+  cursor: pointer;
+
+  background: #222;
+
+  color: white;
+
+  transition: 0.2s;
+
+}
+
+
+button:hover {
+
+  transform: translateY(-2px);
+
+  opacity: 0.85;
+
+}
+
+
+button:disabled {
+
+  background: #aaa;
+
+  cursor: not-allowed;
+
+  transform: none;
+
+}
+
+
+/* =========================
+   로비
+========================= */
+
+.input-area {
+
+  margin-bottom: 25px;
+
+}
+
+
+.room-box {
+
+  width: 100%;
+
+  max-width: 400px;
+
+  margin: 20px auto;
+
+  padding: 20px;
+
+  background: white;
+
+  border-radius: 12px;
+
+  box-shadow:
+    0 5px 20px rgba(0,0,0,0.08);
+
+}
+
+
+#lobbyMessage {
+
+  min-height: 25px;
+
+  font-weight: bold;
+
+}
+
+
+/* =========================
+   대기실
+========================= */
+
+.room-code-area {
+
+  padding: 25px;
+
+  margin: 20px auto;
+
+  background: white;
+
+  border-radius: 12px;
+
+}
+
+
+#roomCodeDisplay {
+
+  display: block;
+
+  margin: 10px;
+
+  font-size: 36px;
+
+  letter-spacing: 8px;
+
+}
+
+
+.small-text {
+
+  color: #777;
+
+}
+
+
+/* =========================
+   참가자 목록
+========================= */
+
+#playerList {
+
+  width: 100%;
+
+  max-width: 500px;
+
+  margin: 20px auto;
+
+}
+
+
+.player-item {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  padding: 15px;
+
+  margin: 8px 0;
+
+  background: white;
+
+  border-radius: 8px;
+
+  box-shadow:
+    0 3px 10px rgba(0,0,0,0.06);
+
+}
+
+
+.host-label {
+
+  font-size: 13px;
+
+  color: #777;
+
+}
+
+
+/* =========================
+   게임 정보
+========================= */
+
+.game-info {
+
+  display: flex;
+
+  justify-content: center;
+
+  flex-wrap: wrap;
+
+  gap: 15px;
+
+  margin-bottom: 15px;
+
+}
+
+
+.game-info > div {
+
+  background: white;
+
+  padding: 10px 15px;
+
+  border-radius: 8px;
+
+}
+
+
+/* =========================
+   힌트
+========================= */
+
+.hint-box {
+
+  width: 100%;
+
+  max-width: 600px;
+
+  margin: 20px auto;
+
+  padding: 20px;
+
+  background: white;
+
+  border-radius: 12px;
+
+  box-shadow:
+    0 5px 20px rgba(0,0,0,0.08);
+
+}
+
+
+.hint {
+
+  display: inline-block;
+
+  min-width: 160px;
+
+  padding: 15px;
+
+  margin: 8px;
+
+  border: 2px solid #333;
+
+  border-radius: 8px;
+
+  font-size: 18px;
+
+  font-weight: bold;
+
+}
+
+
+.hint-warning {
+
+  color: #777;
+
+  font-size: 14px;
+
+}
+
+
+/* =========================
+   오목판
+========================= */
+
+.board-wrapper {
+
+  width: 100%;
+
+  overflow-x: auto;
+
+  padding: 10px;
+
+}
+
+
+#board {
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(19, 1fr);
+
+  width: min(
+    90vw,
+    700px
+  );
+
+  height: min(
+    90vw,
+    700px
+  );
+
+  margin: 0 auto;
+
+  background: #d8b36a;
+
+  border: 3px solid #6b4c20;
+
+  box-shadow:
+    0 5px 20px rgba(0,0,0,0.2);
+
+}
+
+
+/* 오목판 한 칸 */
+
+.cell {
+
+  position: relative;
+
+  border-right: 1px solid #8b6a35;
+
+  border-bottom: 1px solid #8b6a35;
+
+  cursor: pointer;
+
+}
+
+
+/*
+  마지막 열과 마지막 행의
+  불필요한 선 제거
+*/
+
+.cell:nth-child(19n) {
+
+  border-right: none;
+
+}
+
+
+.cell:nth-last-child(-n+19) {
+
+  border-bottom: none;
+
+}
+
+
+/* =========================
+   돌
+========================= */
+
+.stone {
+
+  position: absolute;
+
+  left: 50%;
+
+  top: 50%;
+
+  width: 75%;
+
+  height: 75%;
+
+  transform:
+    translate(-50%, -50%);
+
+  border-radius: 50%;
+
+  z-index: 5;
+
+}
+
+
+/* 흰돌 */
+
+.white-stone {
+
+  background: #ffffff;
+
+  border:
+    1px solid #888;
+
+  box-shadow:
+    0 2px 5px rgba(0,0,0,0.35);
+
+}
+
+
+/* =========================
+   선택 위치 표시
+========================= */
+
+.selected-marker {
+
+  position: absolute;
+
+  left: 50%;
+
+  top: 50%;
+
+  width: 35%;
+
+  height: 35%;
+
+  transform:
+    translate(-50%, -50%);
+
+  border-radius: 50%;
+
+  border: 3px solid #222;
+
+  z-index: 10;
+
+}
+
+
+/* =========================
+   결과
+========================= */
+
+.result-box {
+
+  margin: 25px auto;
+
+  padding: 25px;
+
+  max-width: 600px;
+
+  background: white;
+
+  border-radius: 12px;
+
+  box-shadow:
+    0 5px 20px rgba(0,0,0,0.1);
+
+}
+
+
+#resultTitle {
+
+  font-size: 28px;
+
+}
+
+
+/* =========================
+   모바일
+========================= */
+
+@media (max-width: 600px) {
+
+  .screen {
+
+    padding:
+      20px 10px;
+
+  }
+
+  h1 {
+
+    font-size: 25px;
+
+  }
+
+  #roomCodeDisplay {
+
+    font-size: 28px;
+
+    letter-spacing: 5px;
+
+  }
+
+  .game-info {
+
+    flex-direction: column;
+
+    align-items: center;
+
+  }
+
+  .hint {
+
+    min-width: 130px;
+
+    font-size: 15px;
+
+  }
+
+}
