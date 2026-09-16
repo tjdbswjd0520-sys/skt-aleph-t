@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>간단한 사진 편집기</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #eeeeee;
+            color: #222;
+        }
+
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* -------------------------
+           왼쪽 설정 메뉴
+        ------------------------- */
+        .sidebar {
+            width: 320px;
+            background: white;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid #ddd;
+        }
+
+        .sidebar h1 {
+            font-size: 24px;
+            margin-top: 0;
+            margin-bottom: 25px;
+        }
+
+        .section {
+            border-top: 1px solid #ddd;
+            padding: 20px 0;
+        }
+
+        .section h2 {
+            font-size: 17px;
+            margin: 0 0 15px 0;
+        }
+
+        input,
+        select,
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        button {
+            border: none;
+            background: #222;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #444;
+        }
+
+        .small-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .small-buttons button {
+            flex: 1;
+        }
+
+        input[type="color"] {
+            height: 45px;
+            padding: 3px;
+        }
+
+        input[type="range"] {
+            padding: 0;
+        }
+
+        .range-value {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        /* -------------------------
+           오른쪽 작업 공간
+        ------------------------- */
+        .workspace {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            min-width: 0;
+        }
+
+        .canvas-container {
+            max-width: 100%;
+            max-height: 90vh;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            background: white;
+        }
+
+        canvas {
+            display: block;
+            max-width: 100%;
+            max-height: 85vh;
+            cursor: default;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #777;
+            line-height: 1.5;
+        }
+
+        /* 모바일 */
+        @media (max-width: 800px) {
+            .app {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #ddd;
+            }
+
+            .workspace {
+                min-height: 500px;
+                padding: 15px;
+            }
+
+            canvas {
+                max-height: 70vh;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- =========================
+         왼쪽 설정 메뉴
+    ========================== -->
+    <aside class="sidebar">
+
+        <h1>사진 편집기</h1>
+
+        <!-- 1. 사진 -->
+        <div class="section">
+
+            <h2>1. 사진</h2>
+
+            <input
+                type="file"
+                id="imageInput"
+                accept="image/*"
+            >
+
+            <p class="hint">
+                편집할 사진을 선택하세요.
+            </p>
+
+        </div>
+
+
+        <!-- 2. 글자 -->
+        <div class="section">
+
+            <h2>2. 글자</h2>
+
+            <input
+                type="text"
+                id="textInput"
+                placeholder="추가할 글자를 입력하세요"
+            >
+
+            <button id="addTextButton">
+                글자 추가
+            </button>
+
+            <label>
+                글자 색상
+            </label>
+
+            <input
+                type="color"
+                id="textColor"
+                value="#ffffff"
+            >
+
+            <label>
+                글자 크기
+            </label>
+
+            <input
+                type="range"
+                id="textSize"
+                min="10"
+                max="150"
+                value="50"
+            >
+
+            <div class="range-value">
+                크기: <span id="textSizeValue">50</span>px
+            </div>
+
+            <label>
+                글자 회전
+            </label>
+
+            <input
+                type="range"
+                id="textRotation"
+                min="-180"
+                max="180"
+                value="0"
+            >
+
+            <div class="range-value">
+                회전: <span id="rotationValue">0</span>°
+            </div>
+
+            <div class="small-buttons">
+
+                <button id="rotateLeft">
+                    ↶ -15°
+                </button>
+
+                <button id="rotateRight">
+                    ↷ +15°
+                </button>
+
+            </div>
+
+            <button id="deleteTextButton">
+                선택한 글자 삭제
+            </button>
+
+            <p class="hint">
+                사진 위의 글자를 마우스나 손가락으로 드래그하여 이동할 수 있습니다.
+            </p>
+
+        </div>
+
+
+        <!-- 3. 사진 필터 -->
+        <div class="section">
+
+            <h2>3. 사진 필터</h2>
+
+            <select id="filterSelect">
+
+                <option value="original">
+                    원본
+                </option>
+
+                <option value="grayscale">
+                    흑백
+                </option>
+
+                <option value="sepia">
+                    세피아
+                </option>
+
+                <option value="bright">
+                    밝게
+                </option>
+
+                <option value="dark">
+                    어둡게
+                </option>
+
+                <option value="contrast">
+                    대비 증가
+                </option>
+
+                <option value="vintage">
+                    빈티지
+                </option>
+
+                <option value="blur">
+                    흐리게
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- 4. 사진 비율 -->
+        <div class="section">
+
+            <h2>4. 사진 비율</h2>
+
+            <select id="aspectRatio">
+
+                <option value="original">
+                    원본 비율 — 원본 그대로
+                </option>
+
+                <option value="1:1">
+                    1 : 1 — Instagram 피드, Facebook
+                </option>
+
+                <option value="4:5">
+                    4 : 5 — Instagram 피드
+                </option>
+
+                <option value="16:9">
+                    16 : 9 — YouTube, Facebook, X
+                </option>
+
+                <option value="9:16">
+                    9 : 16 — Instagram 릴스, TikTok, YouTube Shorts
+                </option>
+
+                <option value="3:4">
+                    3 : 4 — Instagram, Pinterest
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- 5. 저장 -->
+        <div class="section">
+
+            <h2>5. 저장</h2>
+
+            <button id="savePng">
+                PNG로 저장
+            </button>
+
+            <button id="saveJpeg">
+                JPEG로 저장
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- =========================
+         오른쪽 사진 작업 영역
+    ========================== -->
+    <main class="workspace">
+
+        <div class="canvas-container">
+
+            <canvas id="canvas"></canvas>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<script>
+
+    /* ========================================
+       기본 변수
+    ======================================== */
+
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    const imageInput = document.getElementById("imageInput");
+
+    const textInput = document.getElementById("textInput");
+    const addTextButton = document.getElementById("addTextButton");
+
+    const textColor = document.getElementById("textColor");
+    const textSize = document.getElementById("textSize");
+
+    const textSizeValue = document.getElementById("textSizeValue");
+
+    const textRotation = document.getElementById("textRotation");
+    const rotationValue = document.getElementById("rotationValue");
+
+    const rotateLeft = document.getElementById("rotateLeft");
+    const rotateRight = document.getElementById("rotateRight");
+
+    const deleteTextButton =
+        document.getElementById("deleteTextButton");
+
+    const filterSelect =
+        document.getElementById("filterSelect");
+
+    const aspectRatio =
+        document.getElementById("aspectRatio");
+
+    const savePng =
+        document.getElementById("savePng");
+
+    const saveJpeg =
+        document.getElementById("saveJpeg");
+
+
+    /* ========================================
+       이미지 관련 변수
+    ======================================== */
+
+    let image = null;
+
+    /*
+       사진 위에 추가된 글자들을 저장합니다.
+
+       각각의 글자는
+
+       text
+       x
+       y
+       color
+       size
+       rotation
+
+       정보를 가지고 있습니다.
+    */
+    let texts = [];
+
+    /*
+       현재 선택된 글자의 번호
+
+       -1이면 선택된 글자가 없는 상태입니다.
+    */
+    let selectedTextIndex = -1;
+
+
+    /* ========================================
+       드래그 관련 변수
+    ======================================== */
+
+    let isDragging = false;
+
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+
+
+    /* ========================================
+       사진 불러오기
+    ======================================== */
+
+    imageInput.addEventListener("change", function(event) {
+
+        const file = event.target.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+
+            const img = new Image();
+
+            img.onload = function() {
+
+                image = img;
+
+                /*
+                   새로운 사진을 불러오면
+                   기존 글자를 모두 제거합니다.
+                */
+                texts = [];
+
+                selectedTextIndex = -1;
+
+                draw();
+
+            };
+
+            img.src = e.target.result;
+
+        };
+
+        reader.readAsDataURL(file);
+
+    });
+
+
+    /* ========================================
+       글자 추가
+    ======================================== */
+
+    addTextButton.addEventListener("click", function() {
+
+        if (!image) {
+
+            alert("먼저 사진을 불러와 주세요.");
+
+            return;
+        }
+
+        const text = textInput.value.trim();
+
+        if (text === "") {
+
+            alert("추가할 글자를 입력해 주세요.");
+
+            return;
+        }
+
+
+        /*
+           사진 가운데에 글자를 추가합니다.
+        */
+
+        const newText = {
+
+            text: text,
+
+            x: canvas.width / 2,
+
+            y: canvas.height / 2,
+
+            color: textColor.value,
+
+            size: Number(textSize.value),
+
+            rotation: 0
+
+        };
+
+
+        texts.push(newText);
+
+        selectedTextIndex = texts.length - 1;
+
+        textInput.value = "";
+
+        draw();
+
+    });
+
+
+    /* ========================================
+       글자 크기 변경
+    ======================================== */
+
+    textSize.addEventListener("input", function() {
+
+        textSizeValue.textContent = textSize.value;
+
+        if (selectedTextIndex !== -1) {
+
+            texts[selectedTextIndex].size =
+                Number(textSize.value);
+
+            draw();
+        }
+
+    });
+
+
+    /* ========================================
+       글자 색상 변경
+    ======================================== */
+
+    textColor.addEventListener("input", function() {
+
+        if (selectedTextIndex !== -1) {
+
+            texts[selectedTextIndex].color =
+                textColor.value;
+
+            draw();
+        }
+
+    });
+
+
+    /* ========================================
+       글자 회전
+    ======================================== */
+
+    textRotation.addEventListener("input", function() {
+
+        rotationValue.textContent =
+            textRotation.value;
+
+        if (selectedTextIndex !== -1) {
+
+            texts[selectedTextIndex].rotation =
+                Number(textRotation.value);
+
+            draw();
+
+        }
+
+    });
+
+
+    /* ========================================
+       왼쪽으로 15도 회전
+    ======================================== */
+
+    rotateLeft.addEventListener("click", function() {
+
+        if (selectedTextIndex === -1) {
+            return;
+        }
+
+        texts[selectedTextIndex].rotation -= 15;
+
+        if (texts[selectedTextIndex].rotation < -180) {
+            texts[selectedTextIndex].rotation = -180;
+        }
+
+        updateRotationUI();
+
+        draw();
+
+    });
+
+
+    /* ========================================
+       오른쪽으로 15도 회전
+    ======================================== */
+
+    rotateRight.addEventListener("click", function() {
+
+        if (selectedTextIndex === -1) {
+            return;
+        }
+
+        texts[selectedTextIndex].rotation += 15;
+
+        if (texts[selectedTextIndex].rotation > 180) {
+            texts[selectedTextIndex].rotation = 180;
+        }
+
+        updateRotationUI();
+
+        draw();
+
+    });
+
+
+    /* ========================================
+       회전 UI 업데이트
+    ======================================== */
+
+    function updateRotationUI() {
+
+        if (selectedTextIndex === -1) {
+            return;
+        }
+
+        const rotation =
+            texts[selectedTextIndex].rotation;
+
+        textRotation.value = rotation;
+
+        rotationValue.textContent = rotation;
+
+    }
+
+
+    /* ========================================
+       선택한 글자 삭제
+    ======================================== */
+
+    deleteTextButton.addEventListener("click", function() {
+
+        if (selectedTextIndex === -1) {
+            return;
+        }
+
+        texts.splice(selectedTextIndex, 1);
+
+        selectedTextIndex = -1;
+
+        draw();
+
+    });
+
+
+    /* ========================================
+       필터 변경
+    ======================================== */
+
+    filterSelect.addEventListener("change", function() {
+
+        draw();
+
+    });
+
+
+    /* ========================================
+       비율 변경
+    ======================================== */
+
+    aspectRatio.addEventListener("change", function() {
+
+        draw();
+
+    });
+
+
+    /* ========================================
+       사진 비율 계산
+    ======================================== */
+
+    function getAspectRatio() {
+
+        const value = aspectRatio.value;
+
+        if (value === "1:1") {
+            return 1;
+        }
+
+        if (value === "4:5") {
+            return 4 / 5;
+        }
+
+        if (value === "16:9") {
+            return 16 / 9;
+        }
+
+        if (value === "9:16") {
+            return 9 / 16;
+        }
+
+        if (value === "3:4") {
+            return 3 / 4;
+        }
+
+        return image.width / image.height;
+
+    }
+
+
+    /* ========================================
+       비율에 맞는 캔버스 크기 설정
+    ======================================== */
+
+    function resizeCanvas() {
+
+        if (!image) {
+            return;
+        }
+
+        const ratio = getAspectRatio();
+
+        let width = image.width;
+        let height = image.height;
+
+
+        /*
+           원본 비율이 아닌 경우
+           비율에 맞춰 캔버스 크기를 만듭니다.
+        */
+
+        if (aspectRatio.value !== "original") {
+
+            if (image.width / image.height > ratio) {
+
+                height = image.height;
+                width = height * ratio;
+
+            } else {
+
+                width = image.width;
+                height = width / ratio;
+
+            }
+
+        }
+
+
+        canvas.width = Math.round(width);
+        canvas.height = Math.round(height);
+
+    }
+
+
+    /* ========================================
+       사진을 비율에 맞게 잘라서 그리기
+    ======================================== */
+
+    function drawImageCover(context, img, x, y, width, height) {
+
+        const sourceRatio =
+            img.width / img.height;
+
+        const targetRatio =
+            width / height;
+
+
+        let sourceX = 0;
+        let sourceY = 0;
+        let sourceWidth = img.width;
+        let sourceHeight = img.height;
+
+
+        if (sourceRatio > targetRatio) {
+
+            /*
+               사진이 더 넓은 경우
+               좌우를 잘라냅니다.
+            */
+
+            sourceWidth =
+                img.height * targetRatio;
+
+            sourceX =
+                (img.width - sourceWidth) / 2;
+
+        } else {
+
+            /*
+               사진이 더 긴 경우
+               위아래를 잘라냅니다.
+            */
+
+            sourceHeight =
+                img.width / targetRatio;
+
+            sourceY =
+                (img.height - sourceHeight) / 2;
+
+        }
+
+
+        context.drawImage(
+
+            img,
+
+            sourceX,
+            sourceY,
+            sourceWidth,
+            sourceHeight,
+
+            x,
+            y,
+            width,
+            height
+
+        );
+
+    }
+
+
+    /* ========================================
+       필터 CSS 만들기
+    ======================================== */
+
+    function getFilter() {
+
+        const filter =
+            filterSelect.value;
+
+
+        switch (filter) {
+
+            case "grayscale":
+                return "grayscale(100%)";
+
+            case "sepia":
+                return "sepia(100%)";
+
+            case "bright":
+                return "brightness(130%)";
+
+            case "dark":
+                return "brightness(70%)";
+
+            case "contrast":
+                return "contrast(150%)";
+
+            case "vintage":
+                return "sepia(35%) contrast(110%) brightness(95%)";
+
+            case "blur":
+                return "blur(3px)";
+
+            default:
+                return "none";
+
+        }
+
+    }
+
+
+    /* ========================================
+       글자 크기 측정
+    ======================================== */
+
+    function getTextBounds(textObject) {
+
+        ctx.save();
+
+        ctx.font =
+            `${textObject.size}px Arial`;
+
+        const width =
+            ctx.measureText(textObject.text).width;
+
+        const height =
+            textObject.size;
+
+        ctx.restore();
+
+
+        return {
+
+            width: width,
+
+            height: height
+
+        };
+
+    }
+
+
+    /* ========================================
+       글자 선택 여부 확인
+    ======================================== */
+
+    function isPointInsideText(
+        mouseX,
+        mouseY,
+        textObject
+    ) {
+
+        const bounds =
+            getTextBounds(textObject);
+
+
+        /*
+           회전된 글자를 간단하게 처리하기 위해
+           글자의 중심을 기준으로 좌표를 회전시킵니다.
+        */
+
+        const angle =
+            -textObject.rotation *
+            Math.PI / 180;
+
+
+        const centerX =
+            textObject.x;
+
+        const centerY =
+            textObject.y;
+
+
+        const dx =
+            mouseX - centerX;
+
+        const dy =
+            mouseY - centerY;
+
+
+        const rotatedX =
+            dx * Math.cos(angle) -
+            dy * Math.sin(angle);
+
+        const rotatedY =
+            dx * Math.sin(angle) +
+            dy * Math.cos(angle);
+
+
+        return (
+
+            rotatedX >
+                -bounds.width / 2 &&
+
+            rotatedX <
+                bounds.width / 2 &&
+
+            rotatedY >
+                -bounds.height / 2 &&
+
+            rotatedY <
+                bounds.height / 2
+
+        );
+
+    }
+
+
+    /* ========================================
+       글자 그리기
+    ======================================== */
+
+    function drawText(textObject, index) {
+
+        ctx.save();
+
+
+        /*
+           글자의 중심을 기준으로 이동
+        */
+
+        ctx.translate(
+            textObject.x,
+            textObject.y
+        );
+
+
+        /*
+           글자 회전
+        */
+
+        ctx.rotate(
+            textObject.rotation *
+            Math.PI / 180
+        );
+
+
+        ctx.font =
+            `${textObject.size}px Arial`;
+
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        ctx.fillStyle =
+            textObject.color;
+
+
+        /*
+           선택된 글자라면
+           점선 테두리를 표시합니다.
+        */
+
+        if (index === selectedTextIndex) {
+
+            const width =
+                ctx.measureText(
+                    textObject.text
+                ).width;
+
+            const height =
+                textObject.size;
+
+            ctx.strokeStyle = "#00aaff";
+
+            ctx.lineWidth = 2;
+
+            ctx.setLineDash([5, 5]);
+
+            ctx.strokeRect(
+
+                -width / 2 - 8,
+
+                -height / 2 - 8,
+
+                width + 16,
+
+                height + 16
+
+            );
+
+            ctx.setLineDash([]);
+
+        }
+
+
+        ctx.fillText(
+
+            textObject.text,
+
+            0,
+
+            0
+
+        );
+
+
+        ctx.restore();
+
+    }
+
+
+    /* ========================================
+       전체 화면 다시 그리기
+    ======================================== */
+
+    function draw() {
+
+        if (!image) {
+
+            canvas.width = 500;
+            canvas.height = 350;
+
+            ctx.fillStyle = "#dddddd";
+
+            ctx.fillRect(
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+
+            ctx.fillStyle = "#777";
+
+            ctx.font = "24px Arial";
+
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            ctx.fillText(
+                "사진을 불러와 주세요",
+                canvas.width / 2,
+                canvas.height / 2
+            );
+
+            return;
+
+        }
+
+
+        /*
+           비율에 맞게 캔버스 크기를 설정합니다.
+        */
+
+        resizeCanvas();
+
+
+        /*
+           기존 화면 초기화
+        */
+
+        ctx.clearRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+
+        /*
+           사진 필터 적용
+        */
+
+        ctx.save();
+
+        ctx.filter = getFilter();
+
+
+        /*
+           사진을 캔버스 크기에 맞춰 그립니다.
+        */
+
+        drawImageCover(
+
+            ctx,
+
+            image,
+
+            0,
+            0,
+
+            canvas.width,
+            canvas.height
+
+        );
+
+
+        ctx.restore();
+
+
+        /*
+           글자를 다시 그립니다.
+        */
+
+        texts.forEach(function(textObject, index) {
+
+            drawText(
+                textObject,
+                index
+            );
+
+        });
+
+    }
+
+
+    /* ========================================
+       캔버스 좌표 변환
+    ======================================== */
+
+    function getCanvasPoint(event) {
+
+        const rect =
+            canvas.getBoundingClientRect();
+
+
+        /*
+           화면에 표시되는 캔버스 크기와
+           실제 캔버스 크기가 다를 수 있기 때문에
+           비율을 계산합니다.
+        */
+
+        const scaleX =
+            canvas.width /
+            rect.width;
+
+        const scaleY =
+            canvas.height /
+            rect.height;
+
+
+        return {
+
+            x:
+                (event.clientX - rect.left)
+                * scaleX,
+
+            y:
+                (event.clientY - rect.top)
+                * scaleY
+
+        };
+
+    }
+
+
+    /* ========================================
+       마우스 / 터치 시작
+    ======================================== */
+
+    canvas.addEventListener(
+        "pointerdown",
+        function(event) {
+
+            const point =
+                getCanvasPoint(event);
+
+
+            /*
+               위에 있는 글자부터 확인합니다.
+               뒤에 있는 글자보다
+               나중에 추가한 글자를 먼저 선택합니다.
+            */
+
+            let foundIndex = -1;
+
+
+            for (
+                let i = texts.length - 1;
+                i >= 0;
+                i--
+            ) {
+
+                if (
+                    isPointInsideText(
+                        point.x,
+                        point.y,
+                        texts[i]
+                    )
+                ) {
+
+                    foundIndex = i;
+
+                    break;
+
+                }
+
+            }
+
+
+            if (foundIndex !== -1) {
+
+                selectedTextIndex =
+                    foundIndex;
+
+
+                const selected =
+                    texts[selectedTextIndex];
+
+
+                /*
+                   글자를 클릭한 위치와
+                   글자 중심 사이의 거리를 저장합니다.
+                */
+
+                dragOffsetX =
+                    point.x - selected.x;
+
+                dragOffsetY =
+                    point.y - selected.y;
+
+
+                /*
+                   현재 글자의 설정값을
+                   메뉴에 표시합니다.
+                */
+
+                textColor.value =
+                    selected.color;
+
+                textSize.value =
+                    selected.size;
+
+                textSizeValue.textContent =
+                    selected.size;
+
+                updateRotationUI();
+
+
+                isDragging = true;
+
+
+                /*
+                   모바일에서 드래그할 때
+                   페이지가 같이 움직이는 것을 방지합니다.
+                */
+
+                canvas.setPointerCapture(
+                    event.pointerId
+                );
+
+
+                draw();
+
+            } else {
+
+                selectedTextIndex = -1;
+
+                draw();
+
+            }
+
+        }
+    );
+
+
+    /* ========================================
+       마우스 / 터치 이동
+    ======================================== */
+
+    canvas.addEventListener(
+        "pointermove",
+        function(event) {
+
+            if (
+                !isDragging ||
+                selectedTextIndex === -1
+            ) {
+                return;
+            }
+
+
+            const point =
+                getCanvasPoint(event);
+
+
+            const selected =
+                texts[selectedTextIndex];
+
+
+            selected.x =
+                point.x - dragOffsetX;
+
+            selected.y =
+                point.y - dragOffsetY;
+
+
+            draw();
+
+        }
+    );
+
+
+    /* ========================================
+       마우스 / 터치 종료
+    ======================================== */
+
+    canvas.addEventListener(
+        "pointerup",
+        function(event) {
+
+            isDragging = false;
+
+            try {
+
+                canvas.releasePointerCapture(
+                    event.pointerId
+                );
+
+            } catch (error) {
+
+                // 특별한 작업은 하지 않습니다.
+
+            }
+
+        }
+    );
+
+
+    canvas.addEventListener(
+        "pointercancel",
+        function() {
+
+            isDragging = false;
+
+        }
+    );
+
+
+    /* ========================================
+       PNG 저장
+    ======================================== */
+
+    savePng.addEventListener(
+        "click",
+        function() {
+
+            if (!image) {
+
+                alert("먼저 사진을 불러와 주세요.");
+
+                return;
+
+            }
+
+
+            canvas.toBlob(
+                function(blob) {
+
+                    const url =
+                        URL.createObjectURL(blob);
+
+
+                    const link =
+                        document.createElement("a");
+
+
+                    link.href = url;
+
+                    link.download =
+                        "edited-image.png";
+
+
+                    link.click();
+
+
+                    URL.revokeObjectURL(url);
+
+                },
+                "image/png"
+            );
+
+        }
+    );
+
+
+    /* ========================================
+       JPEG 저장
+    ======================================== */
+
+    saveJpeg.addEventListener(
+        "click",
+        function() {
+
+            if (!image) {
+
+                alert("먼저 사진을 불러와 주세요.");
+
+                return;
+
+            }
+
+
+            canvas.toBlob(
+                function(blob) {
+
+                    const url =
+                        URL.createObjectURL(blob);
+
+
+                    const link =
+                        document.createElement("a");
+
+
+                    link.href = url;
+
+                    link.download =
+                        "edited-image.jpg";
+
+
+                    link.click();
+
+
+                    URL.revokeObjectURL(url);
+
+                },
+                "image/jpeg",
+                0.95
+            );
+
+        }
+    );
+
+
+    /* ========================================
+       처음 화면 표시
+    ======================================== */
+
+    draw();
+
+</script>
+
+</body>
+</html>
