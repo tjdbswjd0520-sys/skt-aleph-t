@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <!-- 모바일 화면 대응 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>실시간 날씨 비교</title>
+
+
+    <style>
+
+        /* ==========================================
+           기본 설정
+        ========================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            margin: 0;
+
+            font-family: Arial, sans-serif;
+
+            background: linear-gradient(
+                135deg,
+                #dff3ff,
+                #f5fbff
+            );
+
+            color: #222;
+
+            min-height: 100vh;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            padding: 20px;
+
+        }
+
+
+        /* ==========================================
+           메인 컨테이너
+        ========================================== */
+
+        .container {
+
+            width: 100%;
+
+            max-width: 800px;
+
+            background: white;
+
+            border-radius: 20px;
+
+            padding: 30px;
+
+            box-shadow:
+                0 10px 30px rgba(0, 0, 0, 0.1);
+
+        }
+
+
+        /* ==========================================
+           제목
+        ========================================== */
+
+        h1 {
+
+            text-align: center;
+
+            margin-top: 0;
+
+            margin-bottom: 10px;
+
+        }
+
+
+        .description {
+
+            text-align: center;
+
+            color: #666;
+
+            margin-bottom: 25px;
+
+        }
+
+
+        /* ==========================================
+           위치
+        ========================================== */
+
+        .location {
+
+            text-align: center;
+
+            font-size: 18px;
+
+            font-weight: bold;
+
+            margin-bottom: 20px;
+
+        }
+
+
+        /* ==========================================
+           오류 메시지
+        ========================================== */
+
+        .error {
+
+            display: none;
+
+            background: #ffe5e5;
+
+            color: #c62828;
+
+            padding: 15px;
+
+            border-radius: 10px;
+
+            margin-bottom: 20px;
+
+            text-align: center;
+
+            font-weight: bold;
+
+        }
+
+
+        /* ==========================================
+           현재 / 전날 날씨 카드
+        ========================================== */
+
+        .weather-grid {
+
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+
+            gap: 20px;
+
+        }
+
+
+        .weather-card {
+
+            border: 1px solid #ddd;
+
+            border-radius: 15px;
+
+            padding: 20px;
+
+            text-align: center;
+
+        }
+
+
+        .weather-card h2 {
+
+            margin-top: 0;
+
+        }
+
+
+        .today {
+
+            background: #f1f9ff;
+
+        }
+
+
+        .yesterday {
+
+            background: #fafafa;
+
+        }
+
+
+        /* ==========================================
+           기온
+        ========================================== */
+
+        .temperature {
+
+            font-size: 42px;
+
+            font-weight: bold;
+
+            margin: 15px 0;
+
+        }
+
+
+        /* ==========================================
+           습도 / 풍속
+        ========================================== */
+
+        .weather-info {
+
+            display: flex;
+
+            justify-content: space-around;
+
+            margin-top: 20px;
+
+        }
+
+
+        .info-item {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 5px;
+
+        }
+
+
+        .info-title {
+
+            font-size: 13px;
+
+            color: #777;
+
+        }
+
+
+        .info-value {
+
+            font-size: 18px;
+
+            font-weight: bold;
+
+        }
+
+
+        /* ==========================================
+           비교 결과
+        ========================================== */
+
+        .comparison {
+
+            margin-top: 25px;
+
+            padding: 20px;
+
+            background: #f8f8f8;
+
+            border-radius: 15px;
+
+        }
+
+
+        .comparison h2 {
+
+            margin-top: 0;
+
+            text-align: center;
+
+        }
+
+
+        .comparison-row {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            padding: 12px 0;
+
+            border-bottom: 1px solid #ddd;
+
+        }
+
+
+        .comparison-row:last-child {
+
+            border-bottom: none;
+
+        }
+
+
+        .difference {
+
+            font-weight: bold;
+
+        }
+
+
+        /* ==========================================
+           업데이트 정보
+        ========================================== */
+
+        .update-info {
+
+            margin-top: 20px;
+
+            text-align: center;
+
+            color: #777;
+
+            font-size: 14px;
+
+        }
+
+
+        /* ==========================================
+           상태 메시지
+        ========================================== */
+
+        .status {
+
+            text-align: center;
+
+            margin-top: 10px;
+
+            font-size: 14px;
+
+            color: #777;
+
+        }
+
+
+        /* ==========================================
+           모바일 화면
+        ========================================== */
+
+        @media (max-width: 600px) {
+
+            .container {
+
+                padding: 20px;
+
+            }
+
+
+            .weather-grid {
+
+                grid-template-columns: 1fr;
+
+            }
+
+
+            .temperature {
+
+                font-size: 36px;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <main class="container">
+
+
+        <!-- ======================================
+             제목
+        ======================================= -->
+
+        <h1>
+            🌤️ 실시간 날씨 비교
+        </h1>
+
+
+        <p class="description">
+
+            현재 날씨와 전날 동일 시간대의 날씨를 비교합니다.
+
+        </p>
+
+
+        <!-- ======================================
+             위치
+        ======================================= -->
+
+        <div
+            class="location"
+            id="location"
+        >
+            위치 정보를 가져오는 중...
+        </div>
+
+
+        <!-- ======================================
+             오류 메시지
+        ======================================= -->
+
+        <div
+            class="error"
+            id="error"
+        >
+            날씨 데이터를 가져오지 못했습니다.
+        </div>
+
+
+        <!-- ======================================
+             현재 / 전날 날씨
+        ======================================= -->
+
+        <div class="weather-grid">
+
+
+            <!-- 현재 날씨 -->
+
+            <section class="weather-card today">
+
+                <h2>
+                    현재
+                </h2>
+
+
+                <div
+                    class="temperature"
+                    id="currentTemp"
+                >
+                    --℃
+                </div>
+
+
+                <div class="weather-info">
+
+
+                    <div class="info-item">
+
+                        <span class="info-title">
+                            습도
+                        </span>
+
+                        <span
+                            class="info-value"
+                            id="currentHumidity"
+                        >
+                            --%
+                        </span>
+
+                    </div>
+
+
+                    <div class="info-item">
+
+                        <span class="info-title">
+                            풍속
+                        </span>
+
+                        <span
+                            class="info-value"
+                            id="currentWind"
+                        >
+                            -- km/h
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- 전날 날씨 -->
+
+            <section class="weather-card yesterday">
+
+                <h2>
+                    전날 같은 시간
+                </h2>
+
+
+                <div
+                    class="temperature"
+                    id="yesterdayTemp"
+                >
+                    --℃
+                </div>
+
+
+                <div class="weather-info">
+
+
+                    <div class="info-item">
+
+                        <span class="info-title">
+                            습도
+                        </span>
+
+                        <span
+                            class="info-value"
+                            id="yesterdayHumidity"
+                        >
+                            --%
+                        </span>
+
+                    </div>
+
+
+                    <div class="info-item">
+
+                        <span class="info-title">
+                            풍속
+                        </span>
+
+                        <span
+                            class="info-value"
+                            id="yesterdayWind"
+                        >
+                            -- km/h
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+        </div>
+
+
+        <!-- ======================================
+             전날과 비교
+        ======================================= -->
+
+        <section class="comparison">
+
+            <h2>
+                📊 전날과 비교
+            </h2>
+
+
+            <!-- 기온 -->
+
+            <div class="comparison-row">
+
+                <span>
+                    기온
+                </span>
+
+                <span
+                    class="difference"
+                    id="tempDifference"
+                >
+                    --
+                </span>
+
+            </div>
+
+
+            <!-- 습도 -->
+
+            <div class="comparison-row">
+
+                <span>
+                    습도
+                </span>
+
+                <span
+                    class="difference"
+                    id="humidityDifference"
+                >
+                    --
+                </span>
+
+            </div>
+
+
+            <!-- 풍속 -->
+
+            <div class="comparison-row">
+
+                <span>
+                    풍속
+                </span>
+
+                <span
+                    class="difference"
+                    id="windDifference"
+                >
+                    --
+                </span>
+
+            </div>
+
+
+        </section>
+
+
+        <!-- ======================================
+             마지막 정상 업데이트
+        ======================================= -->
+
+        <div class="update-info">
+
+            마지막 정상 업데이트:
+
+            <span id="updateTime">
+                --
+            </span>
+
+        </div>
+
+
+        <!-- ======================================
+             현재 상태
+        ======================================= -->
+
+        <div
+            class="status"
+            id="status"
+        >
+            데이터를 불러오는 중...
+        </div>
+
+
+    </main>
+
+
+
+    <script>
+
+
+        /* ==================================================
+           기본 설정
+        ================================================== */
+
+
+        // 서울을 기본 위치로 사용합니다.
+        // 사용자가 위치 권한을 허용하지 않았을 때 사용합니다.
+
+        const DEFAULT_LATITUDE = 37.5665;
+
+        const DEFAULT_LONGITUDE = 126.9780;
+
+        const DEFAULT_LOCATION_NAME = "서울";
+
+
+        // 현재 사용할 위치
+
+        let latitude = DEFAULT_LATITUDE;
+
+        let longitude = DEFAULT_LONGITUDE;
+
+        let locationName = DEFAULT_LOCATION_NAME;
+
+
+        // 현재 API 요청이 진행 중인지 확인합니다.
+
+        let isLoading = false;
+
+
+        /* ==================================================
+           API 요청 간격
+        ================================================== */
+
+        // 10분 = 10 × 60 × 1000 밀리초
+
+        const UPDATE_INTERVAL =
+            10 * 60 * 1000;
+
+
+        /* ==================================================
+           HTML 요소 가져오기
+        ================================================== */
+
+        const locationElement =
+            document.getElementById("location");
+
+
+        const errorElement =
+            document.getElementById("error");
+
+
+        const statusElement =
+            document.getElementById("status");
+
+
+        const updateTimeElement =
+            document.getElementById("updateTime");
+
+
+        /* ==================================================
+           숫자 차이 계산
+        ================================================== */
+
+        function calculateDifference(
+            current,
+            yesterday
+        ) {
+
+            const difference =
+                current - yesterday;
+
+
+            // 증가
+
+            if (difference > 0) {
+
+                return `▲ ${difference.toFixed(1)}`;
+
+            }
+
+
+            // 감소
+
+            if (difference < 0) {
+
+                return `▼ ${Math.abs(difference).toFixed(1)}`;
+
+            }
+
+
+            // 변화 없음
+
+            return "변화 없음";
+
+        }
+
+
+        /* ==================================================
+           날짜를 YYYY-MM-DD 형태로 변환
+        ================================================== */
+
+        function formatDate(date) {
+
+            const year =
+                date.getFullYear();
+
+
+            const month =
+                String(
+                    date.getMonth() + 1
+                ).padStart(2, "0");
+
+
+            const day =
+                String(
+                    date.getDate()
+                ).padStart(2, "0");
+
+
+            return `${year}-${month}-${day}`;
+
+        }
+
+
+        /* ==================================================
+           전날 날짜 가져오기
+        ================================================== */
+
+        function getYesterdayDate() {
+
+            const yesterday =
+                new Date();
+
+
+            yesterday.setDate(
+                yesterday.getDate() - 1
+            );
+
+
+            return formatDate(
+                yesterday
+            );
+
+        }
+
+
+        /* ==================================================
+           현재 시간 가져오기
+        ================================================== */
+
+        function getCurrentHour() {
+
+            const now =
+                new Date();
+
+
+            return now.getHours();
+
+        }
+
+
+        /* ==================================================
+           날씨 데이터 가져오기
+        ================================================== */
+
+        async function getWeatherData() {
+
+
+            // 이미 API 요청 중이면
+            // 새로운 요청을 보내지 않습니다.
+
+            if (isLoading) {
+
+                return;
+
+            }
+
+
+            isLoading = true;
+
+
+            try {
+
+
+                /* ------------------------------------------
+                   이전 오류 메시지 숨기기
+                ------------------------------------------ */
+
+                errorElement.style.display =
+                    "none";
+
+
+                statusElement.textContent =
+                    "날씨 데이터를 확인하는 중...";
+
+
+                /* ------------------------------------------
+                   현재 날씨 API 주소
+                ------------------------------------------ */
+
+                const currentURL =
+
+                    `https://api.open-meteo.com/v1/forecast` +
+
+                    `?latitude=${latitude}` +
+
+                    `&longitude=${longitude}` +
+
+                    `&current=temperature_2m,relative_humidity_2m,wind_speed_10m` +
+
+                    `&timezone=auto`;
+
+
+                /* ------------------------------------------
+                   전날 날짜
+                ------------------------------------------ */
+
+                const yesterday =
+                    getYesterdayDate();
+
+
+                /* ------------------------------------------
+                   전날 날씨 API 주소
+                ------------------------------------------ */
+
+                const yesterdayURL =
+
+                    `https://archive-api.open-meteo.com/v1/archive` +
+
+                    `?latitude=${latitude}` +
+
+                    `&longitude=${longitude}` +
+
+                    `&start_date=${yesterday}` +
+
+                    `&end_date=${yesterday}` +
+
+                    `&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m` +
+
+                    `&timezone=auto`;
+
+
+                /* ------------------------------------------
+                   두 API에 동시에 요청
+                ------------------------------------------ */
+
+                const [
+                    currentResponse,
+                    yesterdayResponse
+                ] = await Promise.all([
+
+                    fetch(currentURL),
+
+                    fetch(yesterdayURL)
+
+                ]);
+
+
+                /* ------------------------------------------
+                   HTTP 응답 상태 확인
+                ------------------------------------------ */
+
+                if (
+                    !currentResponse.ok ||
+                    !yesterdayResponse.ok
+                ) {
+
+                    throw new Error(
+                        "API 서버가 정상적으로 응답하지 않았습니다."
+                    );
+
+                }
+
+
+                /* ------------------------------------------
+                   JSON 데이터 변환
+                ------------------------------------------ */
+
+                const currentData =
+                    await currentResponse.json();
+
+
+                const yesterdayData =
+                    await yesterdayResponse.json();
+
+
+                /* ------------------------------------------
+                   현재 날씨 데이터 확인
+                ------------------------------------------ */
+
+                if (
+                    !currentData.current
+                ) {
+
+                    throw new Error(
+                        "현재 날씨 데이터가 없습니다."
+                    );
+
+                }
+
+
+                /* ------------------------------------------
+                   현재 날씨 값
+                ------------------------------------------ */
+
+                const currentTemperature =
+                    currentData.current.temperature_2m;
+
+
+                const currentHumidity =
+                    currentData.current.relative_humidity_2m;
+
+
+                const currentWind =
+                    currentData.current.wind_speed_10m;
+
+
+                /* ------------------------------------------
+                   현재 시간
+                ------------------------------------------ */
+
+                const currentHour =
+                    getCurrentHour();
+
+
+                /* ------------------------------------------
+                   전날 같은 시간 데이터
+                ------------------------------------------ */
+
+                const yesterdayTemperature =
+
+                    yesterdayData
+                        .hourly
+                        .temperature_2m[currentHour];
+
+
+                const yesterdayHumidity =
+
+                    yesterdayData
+                        .hourly
+                        .relative_humidity_2m[currentHour];
+
+
+                const yesterdayWind =
+
+                    yesterdayData
+                        .hourly
+                        .wind_speed_10m[currentHour];
+
+
+                /* ------------------------------------------
+                   전날 데이터가 존재하는지 확인
+                ------------------------------------------ */
+
+                if (
+
+                    yesterdayTemperature === null ||
+                    yesterdayTemperature === undefined ||
+
+                    yesterdayHumidity === null ||
+                    yesterdayHumidity === undefined ||
+
+                    yesterdayWind === null ||
+                    yesterdayWind === undefined
+
+                ) {
+
+                    throw new Error(
+                        "전날 동일 시간대의 데이터를 찾을 수 없습니다."
+                    );
+
+                }
+
+
+                /* ==================================================
+                   화면 업데이트
+                ================================================== */
+
+
+                // 위치
+
+                locationElement.textContent =
+                    `📍 ${locationName}`;
+
+
+                // 현재 기온
+
+                document.getElementById(
+                    "currentTemp"
+                ).textContent =
+
+                    `${currentTemperature.toFixed(1)}℃`;
+
+
+                // 현재 습도
+
+                document.getElementById(
+                    "currentHumidity"
+                ).textContent =
+
+                    `${currentHumidity}%`;
+
+
+                // 현재 풍속
+
+                document.getElementById(
+                    "currentWind"
+                ).textContent =
+
+                    `${currentWind.toFixed(1)} km/h`;
+
+
+                // 전날 기온
+
+                document.getElementById(
+                    "yesterdayTemp"
+                ).textContent =
+
+                    `${yesterdayTemperature.toFixed(1)}℃`;
+
+
+                // 전날 습도
+
+                document.getElementById(
+                    "yesterdayHumidity"
+                ).textContent =
+
+                    `${yesterdayHumidity}%`;
+
+
+                // 전날 풍속
+
+                document.getElementById(
+                    "yesterdayWind"
+                ).textContent =
+
+                    `${yesterdayWind.toFixed(1)} km/h`;
+
+
+                /* ==================================================
+                   전날과 차이 계산
+                ================================================== */
+
+
+                // 기온 차이
+
+                document.getElementById(
+                    "tempDifference"
+                ).textContent =
+
+                    `${calculateDifference(
+                        currentTemperature,
+                        yesterdayTemperature
+                    )}℃`;
+
+
+                // 습도 차이
+
+                document.getElementById(
+                    "humidityDifference"
+                ).textContent =
+
+                    `${calculateDifference(
+                        currentHumidity,
+                        yesterdayHumidity
+                    )}%`;
+
+
+                // 풍속 차이
+
+                document.getElementById(
+                    "windDifference"
+                ).textContent =
+
+                    `${calculateDifference(
+                        currentWind,
+                        yesterdayWind
+                    )} km/h`;
+
+
+                /* ==================================================
+                   마지막 정상 업데이트 시간
+                ================================================== */
+
+                const now =
+                    new Date();
+
+
+                updateTimeElement.textContent =
+                    now.toLocaleTimeString(
+                        "ko-KR"
+                    );
+
+
+                /* ==================================================
+                   정상 상태 표시
+                ================================================== */
+
+                statusElement.textContent =
+                    "● 정상적으로 데이터를 받고 있습니다.";
+
+
+            }
+
+            catch (error) {
+
+
+                console.error(
+                    "날씨 데이터 오류:",
+                    error
+                );
+
+
+                /* ------------------------------------------
+                   오류 메시지 표시
+                ------------------------------------------ */
+
+                errorElement.textContent =
+
+                    `⚠️ 날씨 데이터를 가져오지 못했습니다. (${error.message})`;
+
+
+                errorElement.style.display =
+                    "block";
+
+
+                /* ------------------------------------------
+                   기존에 정상적으로 받아온 데이터는
+                   화면에서 삭제하지 않습니다.
+                ------------------------------------------ */
+
+                statusElement.textContent =
+                    "⚠️ 다음 업데이트에서 다시 시도합니다.";
+
+
+            }
+
+            finally {
+
+
+                // API 요청이 끝났으므로
+                // 다시 요청할 수 있도록 변경합니다.
+
+                isLoading = false;
+
+            }
+
+        }
+
+
+        /* ==================================================
+           사용자 위치 가져오기
+        ================================================== */
+
+        function getUserLocation() {
+
+
+            // 브라우저가 위치 정보를 지원하지 않는 경우
+
+            if (!navigator.geolocation) {
+
+
+                latitude =
+                    DEFAULT_LATITUDE;
+
+
+                longitude =
+                    DEFAULT_LONGITUDE;
+
+
+                locationName =
+                    DEFAULT_LOCATION_NAME;
+
+
+                getWeatherData();
+
+
+                return;
+
+            }
+
+
+            /* ------------------------------------------
+               위치 정보 요청
+            ------------------------------------------ */
+
+            navigator.geolocation.getCurrentPosition(
+
+
+                /* --------------------------------------
+                   위치 가져오기 성공
+                -------------------------------------- */
+
+                function(position) {
+
+
+                    latitude =
+                        position.coords.latitude;
+
+
+                    longitude =
+                        position.coords.longitude;
+
+
+                    locationName =
+                        "현재 위치";
+
+
+                    // 위치를 가져온 직후
+                    // 날씨 데이터를 한 번 요청합니다.
+
+                    getWeatherData();
+
+                },
+
+
+                /* --------------------------------------
+                   위치 가져오기 실패
+                -------------------------------------- */
+
+                function(error) {
+
+
+                    console.warn(
+                        "위치 정보를 가져오지 못했습니다.",
+                        error
+                    );
+
+
+                    // 위치 권한을 거부하면
+                    // 서울을 사용합니다.
+
+                    latitude =
+                        DEFAULT_LATITUDE;
+
+
+                    longitude =
+                        DEFAULT_LONGITUDE;
+
+
+                    locationName =
+                        DEFAULT_LOCATION_NAME;
+
+
+                    getWeatherData();
+
+                }
+
+            );
+
+        }
+
+
+        /* ==================================================
+           페이지를 처음 열었을 때
+        ================================================== */
+
+        getUserLocation();
+
+
+        /* ==================================================
+           10분마다 자동 업데이트
+        ================================================== */
+
+        setInterval(
+
+            function() {
+
+                getWeatherData();
+
+            },
+
+            UPDATE_INTERVAL
+
+        );
+
+
+    </script>
+
+
+</body>
+
+</html>
