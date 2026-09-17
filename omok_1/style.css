@@ -6,10 +6,14 @@
   box-sizing: border-box;
 }
 
+html,
 body {
-
   margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
 
+body {
   min-height: 100vh;
 
   font-family:
@@ -25,47 +29,31 @@ body {
     );
 
   color: #222;
-
 }
 
 
 /* =========================
-   화면 공통
+   화면
 ========================= */
 
 .screen {
-
   width: 100%;
-
   max-width: 900px;
-
   margin: 0 auto;
-
   padding: 30px 20px;
-
   text-align: center;
-
 }
-
 
 .hidden {
-
   display: none !important;
-
 }
-
 
 h1 {
-
   margin-bottom: 30px;
-
 }
 
-
 h2 {
-
   margin-top: 15px;
-
 }
 
 
@@ -74,23 +62,17 @@ h2 {
 ========================= */
 
 input {
-
   width: 100%;
-
   max-width: 350px;
 
   padding: 14px;
-
   margin: 8px 0;
 
   border: 1px solid #aaa;
-
   border-radius: 8px;
 
   font-size: 16px;
-
   text-align: center;
-
 }
 
 
@@ -99,13 +81,10 @@ input {
 ========================= */
 
 button {
-
   border: none;
-
   border-radius: 8px;
 
   padding: 13px 22px;
-
   margin: 8px;
 
   font-size: 16px;
@@ -113,31 +92,20 @@ button {
   cursor: pointer;
 
   background: #222;
-
   color: white;
 
   transition: 0.2s;
-
 }
-
 
 button:hover {
-
   transform: translateY(-2px);
-
   opacity: 0.85;
-
 }
 
-
 button:disabled {
-
   background: #aaa;
-
   cursor: not-allowed;
-
   transform: none;
-
 }
 
 
@@ -146,20 +114,14 @@ button:disabled {
 ========================= */
 
 .input-area {
-
   margin-bottom: 25px;
-
 }
 
-
 .room-box {
-
   width: 100%;
-
   max-width: 400px;
 
   margin: 20px auto;
-
   padding: 20px;
 
   background: white;
@@ -167,17 +129,12 @@ button:disabled {
   border-radius: 12px;
 
   box-shadow:
-    0 5px 20px rgba(0,0,0,0.08);
-
+    0 5px 20px rgba(0, 0, 0, 0.08);
 }
 
-
 #lobbyMessage {
-
   min-height: 25px;
-
   font-weight: bold;
-
 }
 
 
@@ -186,63 +143,46 @@ button:disabled {
 ========================= */
 
 .room-code-area {
-
   padding: 25px;
-
   margin: 20px auto;
 
   background: white;
 
   border-radius: 12px;
-
 }
 
-
 #roomCodeDisplay {
-
   display: block;
 
   margin: 10px;
 
   font-size: 36px;
-
   letter-spacing: 8px;
-
 }
 
-
 .small-text {
-
   color: #777;
-
 }
 
 
 /* =========================
-   참가자 목록
+   참가자
 ========================= */
 
 #playerList {
-
   width: 100%;
-
   max-width: 500px;
 
   margin: 20px auto;
-
 }
 
-
 .player-item {
-
   display: flex;
 
   justify-content: space-between;
-
   align-items: center;
 
   padding: 15px;
-
   margin: 8px 0;
 
   background: white;
@@ -250,17 +190,12 @@ button:disabled {
   border-radius: 8px;
 
   box-shadow:
-    0 3px 10px rgba(0,0,0,0.06);
-
+    0 3px 10px rgba(0, 0, 0, 0.06);
 }
 
-
 .host-label {
-
   font-size: 13px;
-
   color: #777;
-
 }
 
 
@@ -269,28 +204,24 @@ button:disabled {
 ========================= */
 
 .game-info {
-
   display: flex;
 
   justify-content: center;
+  align-items: center;
 
   flex-wrap: wrap;
 
   gap: 15px;
 
   margin-bottom: 15px;
-
 }
 
-
 .game-info > div {
-
   background: white;
 
   padding: 10px 15px;
 
   border-radius: 8px;
-
 }
 
 
@@ -299,13 +230,10 @@ button:disabled {
 ========================= */
 
 .hint-box {
-
   width: 100%;
-
   max-width: 600px;
 
   margin: 20px auto;
-
   padding: 20px;
 
   background: white;
@@ -313,38 +241,27 @@ button:disabled {
   border-radius: 12px;
 
   box-shadow:
-    0 5px 20px rgba(0,0,0,0.08);
-
+    0 5px 20px rgba(0, 0, 0, 0.08);
 }
 
-
 .hint {
-
   display: inline-block;
 
   min-width: 160px;
 
   padding: 15px;
-
   margin: 8px;
 
   border: 2px solid #333;
-
   border-radius: 8px;
 
   font-size: 18px;
-
   font-weight: bold;
-
 }
 
-
 .hint-warning {
-
   color: #777;
-
   font-size: 14px;
-
 }
 
 
@@ -352,77 +269,92 @@ button:disabled {
    오목판
 ========================= */
 
-.board-wrapper {
+/*
+  오목판을 담는 영역
 
+  가로로 너무 커지면
+  화면 안에서 스크롤할 수 있습니다.
+*/
+
+.board-wrapper {
   width: 100%;
 
   overflow-x: auto;
+  overflow-y: hidden;
 
-  padding: 10px;
+  padding: 15px 5px;
 
+  display: flex;
+  justify-content: center;
 }
 
 
-#board {
+/*
+  실제 19 x 19 오목판
 
+  aspect-ratio를 사용해서
+  항상 정사각형이 되도록 합니다.
+*/
+
+#board {
   display: grid;
 
   grid-template-columns:
     repeat(19, 1fr);
 
-  width: min(
-    90vw,
-    700px
-  );
+  grid-template-rows:
+    repeat(19, 1fr);
 
-  height: min(
-    90vw,
-    700px
-  );
+  width: min(92vw, 700px);
 
-  margin: 0 auto;
+  aspect-ratio: 1 / 1;
+
+  flex-shrink: 0;
 
   background: #d8b36a;
 
   border: 3px solid #6b4c20;
 
   box-shadow:
-    0 5px 20px rgba(0,0,0,0.2);
-
-}
-
-
-/* 오목판 한 칸 */
-
-.cell {
-
-  position: relative;
-
-  border-right: 1px solid #8b6a35;
-
-  border-bottom: 1px solid #8b6a35;
-
-  cursor: pointer;
-
+    0 5px 20px rgba(0, 0, 0, 0.2);
 }
 
 
 /*
-  마지막 열과 마지막 행의
-  불필요한 선 제거
+  오목판의 한 칸
+
+  각 칸의 크기는
+  19 x 19 grid가 자동으로 결정합니다.
 */
 
-.cell:nth-child(19n) {
+.cell {
+  position: relative;
 
-  border-right: none;
+  min-width: 0;
+  min-height: 0;
 
+  border-right: 1px solid #8b6a35;
+  border-bottom: 1px solid #8b6a35;
+
+  cursor: pointer;
 }
 
 
-.cell:nth-last-child(-n+19) {
+/*
+  마지막 열의 오른쪽 선 제거
+*/
 
+.cell:nth-child(19n) {
+  border-right: none;
+}
+
+
+/*
+  마지막 행의 아래쪽 선 제거
+*/
+
+.cell:nth-last-child(-n + 19) {
   border-bottom: none;
-
 }
 
 
@@ -431,16 +363,13 @@ button:disabled {
 ========================= */
 
 .stone {
-
   position: absolute;
 
   left: 50%;
-
   top: 50%;
 
-  width: 75%;
-
-  height: 75%;
+  width: 76%;
+  height: 76%;
 
   transform:
     translate(-50%, -50%);
@@ -448,40 +377,34 @@ button:disabled {
   border-radius: 50%;
 
   z-index: 5;
-
 }
 
 
 /* 흰돌 */
 
 .white-stone {
-
   background: #ffffff;
 
   border:
     1px solid #888;
 
   box-shadow:
-    0 2px 5px rgba(0,0,0,0.35);
-
+    0 2px 5px rgba(0, 0, 0, 0.35);
 }
 
 
 /* =========================
-   선택 위치 표시
+   플레이어 선택 위치
 ========================= */
 
 .selected-marker {
-
   position: absolute;
 
   left: 50%;
-
   top: 50%;
 
-  width: 35%;
-
-  height: 35%;
+  width: 38%;
+  height: 38%;
 
   transform:
     translate(-50%, -50%);
@@ -491,7 +414,6 @@ button:disabled {
   border: 3px solid #222;
 
   z-index: 10;
-
 }
 
 
@@ -500,7 +422,6 @@ button:disabled {
 ========================= */
 
 .result-box {
-
   margin: 25px auto;
 
   padding: 25px;
@@ -512,15 +433,11 @@ button:disabled {
   border-radius: 12px;
 
   box-shadow:
-    0 5px 20px rgba(0,0,0,0.1);
-
+    0 5px 20px rgba(0, 0, 0, 0.1);
 }
 
-
 #resultTitle {
-
   font-size: 28px;
-
 }
 
 
@@ -531,40 +448,34 @@ button:disabled {
 @media (max-width: 600px) {
 
   .screen {
-
     padding:
       20px 10px;
-
   }
 
   h1 {
-
     font-size: 25px;
-
   }
 
   #roomCodeDisplay {
-
     font-size: 28px;
-
     letter-spacing: 5px;
-
   }
 
   .game-info {
-
     flex-direction: column;
-
-    align-items: center;
-
   }
 
   .hint {
-
     min-width: 130px;
-
     font-size: 15px;
-
   }
 
+  /*
+    모바일에서는 화면 너비의 94%까지
+    오목판을 사용합니다.
+  */
+
+  #board {
+    width: 94vw;
+  }
 }
