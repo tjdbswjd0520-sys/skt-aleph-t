@@ -1,12 +1,11 @@
 /*
 ==================================================
-  멀티플레이어 오목 게임
+  멀티플레이어 오목
 ==================================================
 
-  최대 4명까지 참여할 수 있습니다.
+  최대 4명
 
-  Firebase Realtime Database를 이용해서
-  여러 컴퓨터의 게임 상태를 실시간으로 공유합니다.
+  Firebase Realtime Database 사용
 
 ==================================================
 */
@@ -15,14 +14,12 @@
 // Firebase 기능 가져오기
 
 const {
-
   database,
   ref,
   set,
   get,
   update,
   onValue
-
 } = window.firebaseGame;
 
 
@@ -135,7 +132,7 @@ function showScreen(screen) {
 
 
 // ===============================
-// 방 코드 생성
+// 방 코드
 // ===============================
 
 function generateRoomCode() {
@@ -163,7 +160,7 @@ function generateRoomCode() {
 
 
 // ===============================
-// 플레이어 ID 생성
+// 플레이어 ID
 // ===============================
 
 function generatePlayerId() {
@@ -181,7 +178,7 @@ function generatePlayerId() {
 
 
 // ===============================
-// 빈 오목판 만들기
+// 빈 오목판
 // ===============================
 
 function createEmptyBoard() {
@@ -210,20 +207,83 @@ function createEmptyBoard() {
 
 
 // ===============================
+// Firebase board 안전 처리
+// ===============================
+
+function normalizeBoard(boardData) {
+
+  /*
+    Firebase에 board가 없거나
+    잘못된 형태일 경우를 대비합니다.
+  */
+
+  const board =
+    createEmptyBoard();
+
+
+  if (!boardData) {
+
+    return board;
+
+  }
+
+
+  for (
+    let row = 0;
+    row < BOARD_SIZE;
+    row++
+  ) {
+
+    for (
+      let col = 0;
+      col < BOARD_SIZE;
+      col++
+    ) {
+
+      /*
+        배열 형태
+      */
+
+      if (
+        Array.isArray(boardData) &&
+        boardData[row] &&
+        boardData[row][col]
+      ) {
+
+        board[row][col] =
+          boardData[row][col];
+
+      }
+
+      /*
+        객체 형태
+      */
+
+      else if (
+        boardData[row] &&
+        boardData[row][col]
+      ) {
+
+        board[row][col] =
+          boardData[row][col];
+
+      }
+
+    }
+
+  }
+
+
+  return board;
+
+}
+
+
+// ===============================
 // 초기 흰돌 생성
 // ===============================
 
 function createInitialStones(count) {
-
-  /*
-    초기 돌은 일직선으로 생성합니다.
-
-    방향:
-    0 = 가로
-    1 = 세로
-    2 = 대각선 \
-    3 = 대각선 /
-  */
 
   const directions = [
 
@@ -249,25 +309,26 @@ function createInitialStones(count) {
       ];
 
 
-    const dr = direction[0];
+    const dr =
+      direction[0];
 
-    const dc = direction[1];
+    const dc =
+      direction[1];
 
 
     /*
-      초기 돌은 반드시
-      가장자리(row 0, row 18,
-      col 0, col 18)를 피해야 합니다.
+      가장자리 제외
 
-      그래서 시작점을 1~17 사이에서 선택합니다.
+      시작 위치는
+      1 ~ 17
     */
 
-    let startRow =
+    const startRow =
       Math.floor(
         Math.random() * 17
       ) + 1;
 
-    let startCol =
+    const startCol =
       Math.floor(
         Math.random() * 17
       ) + 1;
@@ -283,8 +344,7 @@ function createInitialStones(count) {
 
 
     /*
-      끝점도 가장자리 밖으로 나가지
-      않는지 확인합니다.
+      끝점도 1 ~ 17이어야 합니다.
     */
 
     if (
@@ -302,7 +362,11 @@ function createInitialStones(count) {
     const stones = [];
 
 
-    for (let i = 0; i < count; i++) {
+    for (
+      let i = 0;
+      i < count;
+      i++
+    ) {
 
       stones.push({
 
@@ -327,23 +391,47 @@ function createInitialStones(count) {
 
 
 // ===============================
-// 초기 돌을 보드에 배치
+// 초기 보드 생성
 // ===============================
 
-function createInitialBoard(initialStones) {
+function createInitialBoard(
+  initialStones
+) {
 
   const board =
     createEmptyBoard();
 
 
-  for (
-    const stone of initialStones
-  ) {
+  if (!initialStones) {
 
-    board[stone.row][stone.col] =
-      "white";
+    return board;
 
   }
+
+
+  initialStones.forEach(
+    stone => {
+
+      if (
+        stone &&
+        Number.isInteger(stone.row) &&
+        Number.isInteger(stone.col) &&
+        stone.row >= 0 &&
+        stone.row < BOARD_SIZE &&
+        stone.col >= 0 &&
+        stone.col < BOARD_SIZE
+      ) {
+
+        board[
+          stone.row
+        ][
+          stone.col
+        ] = "white";
+
+      }
+
+    }
+  );
 
 
   return board;
@@ -359,118 +447,123 @@ createRoomButton.addEventListener(
   "click",
   async () => {
 
-    myNickname =
-      nicknameInput.value.trim();
+    try {
+
+      myNickname =
+        nicknameInput.value.trim();
 
 
-    if (!myNickname) {
+      if (!myNickname) {
 
-      lobbyMessage.textContent =
-        "닉네임을 입력해주세요.";
+        lobbyMessage.textContent =
+          "닉네임을 입력해주세요.";
 
-      return;
-
-    }
-
-
-    myPlayerId =
-      generatePlayerId();
-
-
-    let roomCode;
-
-
-    /*
-      혹시 같은 방 코드가 존재하는지
-      확인합니다.
-    */
-
-    while (true) {
-
-      roomCode =
-        generateRoomCode();
-
-      const roomRef =
-        ref(
-          database,
-          "rooms/" + roomCode
-        );
-
-      const snapshot =
-        await get(roomRef);
-
-
-      if (!snapshot.exists()) {
-
-        break;
+        return;
 
       }
 
-    }
+
+      myPlayerId =
+        generatePlayerId();
 
 
-    currentRoomCode =
-      roomCode;
+      let roomCode;
 
 
-    /*
-      처음 방을 만들 때는
-      방장 1명만 존재합니다.
-    */
+      while (true) {
 
-    const room = {
+        roomCode =
+          generateRoomCode();
 
-      hostId:
-        myPlayerId,
 
-      status:
-        "waiting",
+        const roomRef =
+          ref(
+            database,
+            "rooms/" + roomCode
+          );
 
-      phase:
-        "waiting",
 
-      currentTurn:
-        0,
+        const snapshot =
+          await get(roomRef);
 
-      players: {
 
-        [myPlayerId]: {
+        if (!snapshot.exists()) {
 
-          nickname:
-            myNickname,
-
-          order:
-            0
+          break;
 
         }
 
-      },
-
-      guesses: {},
-
-      initialStones: [],
-
-      board:
-        createEmptyBoard(),
-
-      result:
-        null
-
-    };
+      }
 
 
-    await set(
-      ref(
-        database,
-        "rooms/" + roomCode
-      ),
-      room
-    );
+      currentRoomCode =
+        roomCode;
 
 
-    enterWaitingRoom();
+      const room = {
 
-    listenToRoom();
+        hostId:
+          myPlayerId,
+
+        status:
+          "waiting",
+
+        phase:
+          "waiting",
+
+        currentTurn:
+          0,
+
+        players: {
+
+          [myPlayerId]: {
+
+            nickname:
+              myNickname,
+
+            order:
+              0
+
+          }
+
+        },
+
+        guesses: {},
+
+        initialStones: [],
+
+        board:
+          createEmptyBoard(),
+
+        result:
+          null
+
+      };
+
+
+      await set(
+        ref(
+          database,
+          "rooms/" +
+          roomCode
+        ),
+        room
+      );
+
+
+      enterWaitingRoom();
+
+      listenToRoom();
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      lobbyMessage.textContent =
+        "방을 만드는 중 오류가 발생했습니다.";
+
+    }
 
   }
 );
@@ -484,143 +577,157 @@ joinRoomButton.addEventListener(
   "click",
   async () => {
 
-    myNickname =
-      nicknameInput.value.trim();
+    try {
 
-    const roomCode =
-      roomCodeInput.value
-        .trim()
-        .toUpperCase();
+      myNickname =
+        nicknameInput.value.trim();
 
 
-    if (!myNickname) {
-
-      lobbyMessage.textContent =
-        "닉네임을 입력해주세요.";
-
-      return;
-
-    }
+      const roomCode =
+        roomCodeInput.value
+          .trim()
+          .toUpperCase();
 
 
-    if (roomCode.length !== 6) {
+      if (!myNickname) {
 
-      lobbyMessage.textContent =
-        "6자리 방 코드를 입력해주세요.";
+        lobbyMessage.textContent =
+          "닉네임을 입력해주세요.";
 
-      return;
+        return;
 
-    }
+      }
 
 
-    const roomRef =
-      ref(
-        database,
-        "rooms/" + roomCode
+      if (roomCode.length !== 6) {
+
+        lobbyMessage.textContent =
+          "6자리 방 코드를 입력해주세요.";
+
+        return;
+
+      }
+
+
+      const roomRef =
+        ref(
+          database,
+          "rooms/" +
+          roomCode
+        );
+
+
+      const snapshot =
+        await get(roomRef);
+
+
+      if (!snapshot.exists()) {
+
+        lobbyMessage.textContent =
+          "존재하지 않는 방입니다.";
+
+        return;
+
+      }
+
+
+      const room =
+        snapshot.val();
+
+
+      if (
+        room.status !==
+        "waiting"
+      ) {
+
+        lobbyMessage.textContent =
+          "이미 게임이 시작된 방입니다.";
+
+        return;
+
+      }
+
+
+      const players =
+        room.players || {};
+
+
+      const playerCount =
+        Object.keys(players).length;
+
+
+      if (
+        playerCount >=
+        MAX_PLAYERS
+      ) {
+
+        lobbyMessage.textContent =
+          "방이 가득 찼습니다.";
+
+        return;
+
+      }
+
+
+      myPlayerId =
+        generatePlayerId();
+
+
+      currentRoomCode =
+        roomCode;
+
+
+      await update(
+        roomRef,
+        {
+
+          [`players/${myPlayerId}`]: {
+
+            nickname:
+              myNickname,
+
+            order:
+              playerCount
+
+          }
+
+        }
       );
 
 
-    const snapshot =
-      await get(roomRef);
+      enterWaitingRoom();
+
+      listenToRoom();
 
 
-    if (!snapshot.exists()) {
+    } catch (error) {
 
-      lobbyMessage.textContent =
-        "존재하지 않는 방입니다.";
-
-      return;
-
-    }
-
-
-    const room =
-      snapshot.val();
-
-
-    if (room.status !== "waiting") {
+      console.error(error);
 
       lobbyMessage.textContent =
-        "이미 게임이 시작된 방입니다.";
-
-      return;
+        "방에 참가하는 중 오류가 발생했습니다.";
 
     }
-
-
-    const players =
-      room.players || {};
-
-
-    const playerCount =
-      Object.keys(players).length;
-
-
-    if (playerCount >= MAX_PLAYERS) {
-
-      lobbyMessage.textContent =
-        "방이 가득 찼습니다.";
-
-      return;
-
-    }
-
-
-    myPlayerId =
-      generatePlayerId();
-
-
-    currentRoomCode =
-      roomCode;
-
-
-    /*
-      새로운 플레이어의 순서를 결정합니다.
-    */
-
-    const newPlayerOrder =
-      playerCount;
-
-
-    await update(
-      roomRef,
-      {
-
-        [`players/${myPlayerId}`]: {
-
-          nickname:
-            myNickname,
-
-          order:
-            newPlayerOrder
-
-        }
-
-      }
-    );
-
-
-    enterWaitingRoom();
-
-    listenToRoom();
 
   }
 );
 
 
 // ===============================
-// 대기실 들어가기
+// 대기실
 // ===============================
 
 function enterWaitingRoom() {
 
-  showScreen(waitingRoom);
+  showScreen(
+    waitingRoom
+  );
 
 }
 
 
 // ===============================
-// Firebase 방 데이터 감시
+// Firebase 실시간 감시
 // ===============================
 
 function listenToRoom() {
@@ -628,13 +735,14 @@ function listenToRoom() {
   const roomRef =
     ref(
       database,
-      "rooms/" + currentRoomCode
+      "rooms/" +
+      currentRoomCode
     );
 
 
   onValue(
     roomRef,
-    (snapshot) => {
+    snapshot => {
 
       if (!snapshot.exists()) {
 
@@ -651,7 +759,7 @@ function listenToRoom() {
 
 
       /*
-        게임 상태에 따라 화면을 변경합니다.
+        대기 상태
       */
 
       if (
@@ -661,11 +769,28 @@ function listenToRoom() {
 
         renderWaitingRoom();
 
+        return;
+
       }
 
-      else {
 
-        showScreen(gameScreen);
+      /*
+        게임 상태
+
+        여기서 반드시 게임 화면을
+        표시한 후 오목판을 그립니다.
+      */
+
+      if (
+        currentRoom.phase ===
+        "playing" ||
+        currentRoom.phase ===
+        "finished"
+      ) {
+
+        showScreen(
+          gameScreen
+        );
 
         renderGame();
 
@@ -683,7 +808,9 @@ function listenToRoom() {
 
 function renderWaitingRoom() {
 
-  showScreen(waitingRoom);
+  showScreen(
+    waitingRoom
+  );
 
 
   roomCodeDisplay.textContent =
@@ -710,7 +837,9 @@ function renderWaitingRoom() {
     ([id, player]) => {
 
       const div =
-        document.createElement("div");
+        document.createElement(
+          "div"
+        );
 
 
       div.className =
@@ -718,7 +847,9 @@ function renderWaitingRoom() {
 
 
       const name =
-        document.createElement("span");
+        document.createElement(
+          "span"
+        );
 
 
       name.textContent =
@@ -726,7 +857,9 @@ function renderWaitingRoom() {
 
 
       const label =
-        document.createElement("span");
+        document.createElement(
+          "span"
+        );
 
 
       if (
@@ -753,10 +886,6 @@ function renderWaitingRoom() {
   );
 
 
-  /*
-    방장에게만 게임 시작 버튼을 표시합니다.
-  */
-
   if (
     myPlayerId ===
     currentRoom.hostId
@@ -767,12 +896,8 @@ function renderWaitingRoom() {
     );
 
 
-    if (playerArray.length >= 1) {
-
-      waitingMessage.textContent =
-        "참가자가 준비되면 게임을 시작하세요.";
-
-    }
+    waitingMessage.textContent =
+      "참가자가 준비되면 게임을 시작하세요.";
 
   }
 
@@ -799,113 +924,138 @@ startGameButton.addEventListener(
   "click",
   async () => {
 
-    /*
-      방장만 게임을 시작할 수 있습니다.
-    */
+    try {
 
-    if (
-      myPlayerId !==
-      currentRoom.hostId
-    ) {
+      if (
+        myPlayerId !==
+        currentRoom.hostId
+      ) {
 
-      return;
+        return;
 
-    }
+      }
 
 
-    const players =
-      currentRoom.players || {};
+      const players =
+        currentRoom.players || {};
 
 
-    const playerArray =
-      Object.entries(players)
-        .sort(
-          (a, b) =>
-            a[1].order -
-            b[1].order
+      const playerArray =
+        Object.entries(players)
+          .sort(
+            (a, b) =>
+              a[1].order -
+              b[1].order
+          );
+
+
+      const playerCount =
+        playerArray.length;
+
+
+      if (
+        playerCount < 1 ||
+        playerCount > MAX_PLAYERS
+      ) {
+
+        return;
+
+      }
+
+
+      /*
+        초기 돌 개수
+
+        1명 = 4개
+        2명 = 3개
+        3명 = 2개
+        4명 = 1개
+      */
+
+      const initialStoneCount =
+        5 - playerCount;
+
+
+      const initialStones =
+        createInitialStones(
+          initialStoneCount
         );
 
 
-    const playerCount =
-      playerArray.length;
+      /*
+        초기 흰돌이 실제로 들어있는
+        보드를 생성합니다.
+      */
+
+      const initialBoard =
+        createInitialBoard(
+          initialStones
+        );
 
 
-    /*
-      초기 돌 개수
+      /*
+        Firebase에 게임 시작 상태 저장
+      */
 
-      1명 → 4개
-      2명 → 3개
-      3명 → 2개
-      4명 → 1개
-    */
+      await update(
+        ref(
+          database,
+          "rooms/" +
+          currentRoomCode
+        ),
+        {
 
-    const initialStoneCount =
-      5 - playerCount;
+          status:
+            "playing",
 
+          phase:
+            "playing",
 
-    const initialStones =
-      createInitialStones(
-        initialStoneCount
+          currentTurn:
+            0,
+
+          initialStones:
+            initialStones,
+
+          board:
+            initialBoard,
+
+          guesses:
+            {},
+
+          result:
+            null
+
+        }
       );
 
 
-    /*
-      초기 흰돌을 실제 보드에 배치합니다.
-    */
+    } catch (error) {
 
-    const board =
-      createInitialBoard(
-        initialStones
+      console.error(
+        "게임 시작 오류:",
+        error
       );
 
+      alert(
+        "게임을 시작하는 중 오류가 발생했습니다."
+      );
 
-    /*
-      게임 시작
-    */
-
-    await update(
-      ref(
-        database,
-        "rooms/" +
-        currentRoomCode
-      ),
-      {
-
-        status:
-          "playing",
-
-        phase:
-          "playing",
-
-        currentTurn:
-          0,
-
-        initialStones:
-          initialStones,
-
-        board:
-          board,
-
-        guesses:
-          {},
-
-        result:
-          null
-
-      }
-    );
+    }
 
   }
 );
 
 
 // ===============================
-// 게임 화면 표시
+// 게임 화면
 // ===============================
 
 function renderGame() {
 
-  showScreen(gameScreen);
+  showScreen(
+    gameScreen
+  );
 
 
   gameRoomCode.textContent =
@@ -915,6 +1065,12 @@ function renderGame() {
   myNicknameElement.textContent =
     myNickname;
 
+
+  /*
+    중요:
+    게임 화면을 표시한 후
+    오목판을 생성합니다.
+  */
 
   renderBoard();
 
@@ -928,7 +1084,7 @@ function renderGame() {
 
 
 // ===============================
-// 현재 차례 표시
+// 현재 차례
 // ===============================
 
 function renderTurn() {
@@ -945,10 +1101,6 @@ function renderTurn() {
           b[1].order
       );
 
-
-  /*
-    게임 종료
-  */
 
   if (
     currentRoom.phase ===
@@ -970,6 +1122,9 @@ function renderTurn() {
 
 
   if (!currentPlayer) {
+
+    turnText.textContent =
+      "차례 확인 중...";
 
     return;
 
@@ -1005,15 +1160,10 @@ function renderTurn() {
 
 
 // ===============================
-// 힌트 표시
+// 힌트
 // ===============================
 
 function renderHints() {
-
-  /*
-    첫 번째 플레이어는
-    이전 위치가 없으므로 힌트가 없습니다.
-  */
 
   if (
     currentRoom.currentTurn ===
@@ -1029,10 +1179,6 @@ function renderHints() {
   }
 
 
-  /*
-    게임이 끝난 경우 힌트 제거
-  */
-
   if (
     currentRoom.phase ===
     "finished"
@@ -1046,11 +1192,6 @@ function renderHints() {
 
   }
 
-
-  /*
-    내 차례가 아니면 힌트를
-    보여주지 않습니다.
-  */
 
   const players =
     currentRoom.players || {};
@@ -1073,6 +1214,10 @@ function renderHints() {
 
   if (!currentPlayer) {
 
+    hintBox.classList.add(
+      "hidden"
+    );
+
     return;
 
   }
@@ -1092,10 +1237,6 @@ function renderHints() {
   }
 
 
-  /*
-    이전 플레이어 찾기
-  */
-
   const previousPlayer =
     playerArray[
       currentRoom.currentTurn - 1
@@ -1104,18 +1245,18 @@ function renderHints() {
 
   if (!previousPlayer) {
 
+    hintBox.classList.add(
+      "hidden"
+    );
+
     return;
 
   }
 
 
-  const previousPlayerId =
-    previousPlayer[0];
-
-
   const previousGuess =
     currentRoom.guesses?.[
-      previousPlayerId
+      previousPlayer[0]
     ];
 
 
@@ -1129,10 +1270,6 @@ function renderHints() {
 
   }
 
-
-  /*
-    힌트 생성
-  */
 
   const hints =
     createHints(
@@ -1155,18 +1292,10 @@ function renderHints() {
 
 
 // ===============================
-// 진짜 / 가짜 힌트 생성
+// 힌트 생성
 // ===============================
 
 function createHints(position) {
-
-  /*
-    이전 플레이어가 선택한 위치:
-    
-    row = 세로 좌표
-    col = 가로 좌표
-  */
-
 
   const row =
     position.row + 1;
@@ -1174,11 +1303,6 @@ function createHints(position) {
   const col =
     position.col + 1;
 
-
-  /*
-    가로 또는 세로 중 하나를
-    무작위로 선택합니다.
-  */
 
   const useRow =
     Math.random() < 0.5;
@@ -1191,20 +1315,13 @@ function createHints(position) {
 
   if (useRow) {
 
-    /*
-      진짜 세로 좌표
-    */
-
     realHint =
       "세로 좌표: " +
       row;
 
 
-    /*
-      다른 세로 좌표를 가짜로 생성
-    */
-
     let fakeRow;
+
 
     do {
 
@@ -1228,20 +1345,13 @@ function createHints(position) {
 
   else {
 
-    /*
-      진짜 가로 좌표
-    */
-
     realHint =
       "가로 좌표: " +
       col;
 
 
-    /*
-      다른 가로 좌표를 가짜로 생성
-    */
-
     let fakeCol;
+
 
     do {
 
@@ -1265,8 +1375,7 @@ function createHints(position) {
 
 
   /*
-    어떤 것이 진짜인지
-    표시되지 않도록 순서를 섞습니다.
+    진짜/가짜 순서를 무작위로 변경
   */
 
   if (
@@ -1280,65 +1389,93 @@ function createHints(position) {
 
   }
 
-  else {
 
-    return [
-      fakeHint,
-      realHint
-    ];
-
-  }
+  return [
+    fakeHint,
+    realHint
+  ];
 
 }
 
 
 // ===============================
-// 오목판 그리기
+// 오목판
 // ===============================
 
 function renderBoard() {
 
-  boardElement.innerHTML = "";
+  /*
+    혹시 board 요소를 찾지 못하면
+    오류를 콘솔에 표시합니다.
+  */
 
+  if (!boardElement) {
 
-  const board =
-    currentRoom.board ||
-    createEmptyBoard();
+    console.error(
+      "오목판 요소(#board)를 찾을 수 없습니다."
+    );
 
+    return;
 
-  const guesses =
-    currentRoom.guesses ||
-    {};
+  }
 
 
   /*
-    게임 중에는 선택 위치도 표시합니다.
+    기존 오목판 삭제
   */
 
-  const selectedPositions = {};
+  boardElement.innerHTML = "";
 
 
-  Object.entries(guesses)
+  /*
+    Firebase 데이터에서
+    안전한 19x19 보드 생성
+  */
+
+  const board =
+    normalizeBoard(
+      currentRoom.board
+    );
+
+
+  const guesses =
+    currentRoom.guesses || {};
+
+
+  /*
+    플레이어들이 현재 선택한 위치
+  */
+
+  const selectedPositions =
+    {};
+
+
+  Object.values(
+    guesses
+  )
     .forEach(
-      ([playerId, position]) => {
+      position => {
 
-        if (
-          position &&
-          currentRoom.phase !==
-          "finished"
-        ) {
+        if (!position) {
 
-          selectedPositions[
-            position.row +
-            "," +
-            position.col
-          ] = true;
+          return;
 
         }
+
+
+        selectedPositions[
+          position.row +
+          "," +
+          position.col
+        ] = true;
 
       }
     );
 
+
+  /*
+    19 x 19 = 361개의 칸 생성
+  */
 
   for (
     let row = 0;
@@ -1363,10 +1500,11 @@ function renderBoard() {
 
 
       /*
-        실제 흰돌이 있는 경우
+        흰돌 표시
       */
 
       if (
+        board[row] &&
         board[row][col] ===
         "white"
       ) {
@@ -1381,15 +1519,15 @@ function renderBoard() {
           "stone white-stone";
 
 
-        cell.appendChild(stone);
+        cell.appendChild(
+          stone
+        );
 
       }
 
 
       /*
-        아직 게임이 끝나지 않았고
-        누군가 선택한 위치라면
-        선택 표시를 보여줍니다.
+        게임 중 선택된 위치 표시
       */
 
       if (
@@ -1423,8 +1561,7 @@ function renderBoard() {
 
 
       /*
-        현재 내 차례라면
-        빈 칸을 클릭할 수 있습니다.
+        클릭하면 위치 선택
       */
 
       cell.addEventListener(
@@ -1448,6 +1585,21 @@ function renderBoard() {
 
   }
 
+
+  /*
+    디버깅용 로그
+
+    개발자 도구에서
+    361이 나오면 19x19판이
+    정상적으로 만들어진 것입니다.
+  */
+
+  console.log(
+    "오목판 생성 완료:",
+    boardElement.children.length,
+    "칸"
+  );
+
 }
 
 
@@ -1459,10 +1611,6 @@ async function selectPosition(
   row,
   col
 ) {
-
-  /*
-    게임이 끝났다면 선택 불가능
-  */
 
   if (
     !currentRoom ||
@@ -1501,10 +1649,6 @@ async function selectPosition(
   }
 
 
-  /*
-    내 차례가 아니라면 선택 불가능
-  */
-
   if (
     currentPlayer[0] !==
     myPlayerId
@@ -1520,15 +1664,19 @@ async function selectPosition(
 
 
   const board =
-    currentRoom.board;
+    normalizeBoard(
+      currentRoom.board
+    );
 
 
   /*
-    이미 돌이 있는 위치는 선택 불가능
+    이미 초기 돌이나 다른 돌이
+    놓여 있는 곳은 선택 불가능
   */
 
   if (
-    board[row][col]
+    board[row][col] ===
+    "white"
   ) {
 
     alert(
@@ -1540,24 +1688,24 @@ async function selectPosition(
   }
 
 
-  /*
-    이전 플레이어가 이미 선택한 위치도
-    선택하지 못하도록 합니다.
-  */
-
   const guesses =
     currentRoom.guesses || {};
 
 
+  /*
+    다른 플레이어가 선택한 위치인지 확인
+  */
+
   const alreadySelected =
     Object.values(
       guesses
-    ).some(
-      position =>
-        position &&
-        position.row === row &&
-        position.col === col
-    );
+    )
+      .some(
+        position =>
+          position &&
+          position.row === row &&
+          position.col === col
+      );
 
 
   if (alreadySelected) {
@@ -1570,10 +1718,6 @@ async function selectPosition(
 
   }
 
-
-  /*
-    내 선택 위치 저장
-  */
 
   const newGuess = {
 
@@ -1594,10 +1738,6 @@ async function selectPosition(
     currentRoom.currentTurn;
 
 
-  /*
-    마지막 플레이어인지 확인
-  */
-
   const isLastPlayer =
     currentTurn ===
     playerCount - 1;
@@ -1612,8 +1752,8 @@ async function selectPosition(
 
 
   /*
-    마지막 플레이어가 아니라면
-    선택 위치만 저장하고 다음 플레이어에게 넘깁니다.
+    아직 마지막 플레이어가 아니라면
+    다음 차례로 이동
   */
 
   if (!isLastPlayer) {
@@ -1637,8 +1777,7 @@ async function selectPosition(
 
 
   /*
-    마지막 플레이어라면
-    먼저 마지막 선택 위치를 저장합니다.
+    마지막 플레이어
   */
 
   const allGuesses = {
@@ -1652,17 +1791,19 @@ async function selectPosition(
 
 
   /*
-    모든 플레이어의 위치를
-    보드에 흰돌로 배치합니다.
+    현재 보드 복사
   */
 
   const finalBoard =
-    JSON.parse(
-      JSON.stringify(
-        board
-      )
+    normalizeBoard(
+      currentRoom.board
     );
 
+
+  /*
+    모든 플레이어가 선택한 위치에
+    흰돌 배치
+  */
 
   Object.values(
     allGuesses
@@ -1671,7 +1812,11 @@ async function selectPosition(
       position => {
 
         if (
-          position
+          position &&
+          position.row >= 0 &&
+          position.row < BOARD_SIZE &&
+          position.col >= 0 &&
+          position.col < BOARD_SIZE
         ) {
 
           finalBoard[
@@ -1688,7 +1833,7 @@ async function selectPosition(
 
 
   /*
-    오목 완성 여부 확인
+    오목 검사
   */
 
   const completed =
@@ -1697,26 +1842,10 @@ async function selectPosition(
     );
 
 
-  /*
-    결과 메시지
-  */
-
-  let resultMessage;
-
-
-  if (completed) {
-
-    resultMessage =
-      "오목이 완성되었습니다!";
-
-  }
-
-  else {
-
-    resultMessage =
-      "오목이 완성되지 않았습니다.";
-
-  }
+  const resultMessage =
+    completed
+      ? "오목이 완성되었습니다!"
+      : "오목이 완성되지 않았습니다.";
 
 
   /*
@@ -1756,19 +1885,10 @@ async function selectPosition(
 
 
 // ===============================
-// 오목 판정
+// 오목 검사
 // ===============================
 
 function checkGomoku(board) {
-
-  /*
-    4가지 방향
-
-    가로
-    세로
-    대각선 \
-    대각선 /
-  */
 
   const directions = [
 
@@ -1848,7 +1968,9 @@ function checkGomoku(board) {
         }
 
 
-        if (count >= 5) {
+        if (
+          count >= 5
+        ) {
 
           return true;
 
@@ -1867,7 +1989,7 @@ function checkGomoku(board) {
 
 
 // ===============================
-// 결과 표시
+// 결과
 // ===============================
 
 function renderResult() {
@@ -1898,6 +2020,7 @@ function renderResult() {
     resultTitle.textContent =
       "🎉 오목 완성!";
 
+
     resultText.textContent =
       "모든 선택 위치가 공개되었습니다. 오목이 완성되었습니다.";
 
@@ -1907,6 +2030,7 @@ function renderResult() {
 
     resultTitle.textContent =
       "게임 종료";
+
 
     resultText.textContent =
       "모든 선택 위치가 공개되었습니다. 오목은 완성되지 않았습니다.";
