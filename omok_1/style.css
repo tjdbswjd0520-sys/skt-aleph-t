@@ -1,4 +1,3 @@
-```css
 /* =========================
    전체 페이지
    ========================= */
@@ -11,12 +10,32 @@ body {
 
     background: #f5f5f5;
 
+    min-height: 100vh;
+
+    box-sizing: border-box;
+}
+
+
+/* =========================
+   화면
+   ========================= */
+
+.screen {
+    width: 100%;
+
     display: flex;
     flex-direction: column;
     align-items: center;
 
-    min-height: 100vh;
     box-sizing: border-box;
+}
+
+
+/* 숨겨진 화면
+   중요: 대기실과 게임 화면을
+   처음에는 숨겨줍니다. */
+.hidden {
+    display: none !important;
 }
 
 
@@ -32,38 +51,18 @@ h1 {
 
 
 /* =========================
-   게임 정보 영역
+   입력 영역
    ========================= */
 
-#gameInfo {
-    width: min(92vw, 700px);
+.input-area {
+    width: 100%;
 
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    margin-bottom: 15px;
-
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-
-/* =========================
-   방 생성 / 참가 영역
-   ========================= */
-
-#roomArea {
     display: flex;
     justify-content: center;
-    align-items: center;
-
-    gap: 10px;
 
     margin-bottom: 20px;
-
-    flex-wrap: wrap;
 }
+
 
 input {
     padding: 10px;
@@ -75,6 +74,40 @@ input {
 
     box-sizing: border-box;
 }
+
+
+/* =========================
+   방 생성 / 참가 영역
+   ========================= */
+
+.room-box {
+    width: min(90vw, 400px);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 10px;
+
+    margin-bottom: 20px;
+
+    padding: 20px;
+
+    box-sizing: border-box;
+
+    background: white;
+
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}
+
+
+.room-box h2 {
+    margin: 0 0 5px;
+
+    text-align: center;
+}
+
 
 button {
     padding: 10px 15px;
@@ -90,8 +123,150 @@ button {
     color: white;
 }
 
+
 button:hover {
     background: #555;
+}
+
+
+/* =========================
+   로비 메시지
+   ========================= */
+
+#lobbyMessage {
+    text-align: center;
+}
+
+
+/* =========================
+   대기실
+   ========================= */
+
+.room-code-area {
+    text-align: center;
+
+    margin-bottom: 20px;
+}
+
+
+.room-code-area p {
+    margin: 5px 0;
+}
+
+
+#roomCodeDisplay {
+    display: block;
+
+    font-size: 32px;
+
+    letter-spacing: 5px;
+
+    margin: 10px 0;
+}
+
+
+.small-text {
+    font-size: 14px;
+
+    color: #666;
+}
+
+
+#playerList {
+    width: min(90vw, 400px);
+
+    margin-bottom: 20px;
+}
+
+
+.start-button {
+    margin-bottom: 15px;
+}
+
+
+#waitingMessage {
+    text-align: center;
+}
+
+
+/* =========================
+   게임 정보
+   ========================= */
+
+.game-info {
+    width: min(92vw, 700px);
+
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 10px;
+
+    margin-bottom: 15px;
+
+    flex-wrap: wrap;
+}
+
+
+/* =========================
+   힌트
+   ========================= */
+
+.hint-box {
+    width: min(92vw, 700px);
+
+    margin-bottom: 15px;
+
+    padding: 15px;
+
+    box-sizing: border-box;
+
+    background: white;
+
+    border: 1px solid #ddd;
+
+    border-radius: 10px;
+
+    text-align: center;
+}
+
+
+.hint-box h2 {
+    margin-top: 0;
+}
+
+
+.hint {
+    margin: 8px 0;
+
+    font-weight: bold;
+}
+
+
+.hint-warning {
+    margin-bottom: 0;
+
+    font-size: 14px;
+
+    color: #777;
+}
+
+
+/* =========================
+   오목판 바깥 영역
+   ========================= */
+
+.board-wrapper {
+    width: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    box-sizing: border-box;
+
+    overflow: visible;
 }
 
 
@@ -124,8 +299,16 @@ button:hover {
 
 
 /* =========================
-   각각의 교차점
+   오목판 위치
    ========================= */
+
+/*
+   기존에는 각 칸의 가장자리에
+   선이 그려졌습니다.
+
+   이제 각 칸의 중앙을
+   하나의 '교차점'으로 사용합니다.
+*/
 
 .board-cell {
     position: relative;
@@ -133,21 +316,22 @@ button:hover {
     min-width: 0;
     min-height: 0;
 
-    /*
-       기존의 칸 테두리를 제거합니다.
-       오목판의 선은 칸 중앙에 표시합니다.
-    */
     border: none;
 
     cursor: pointer;
+
+    box-sizing: border-box;
 }
 
 
-/*
+/* =========================
    세로선
+   ========================= */
 
-   각 칸의 정확한 중앙을 지나갑니다.
+/*
+   각 칸의 중앙을 통과하는 세로선
 */
+
 .board-cell::before {
     content: "";
 
@@ -164,14 +348,19 @@ button:hover {
     transform: translateX(-50%);
 
     z-index: 0;
+
+    pointer-events: none;
 }
 
 
-/*
+/* =========================
    가로선
+   ========================= */
 
-   각 칸의 정확한 중앙을 지나갑니다.
+/*
+   각 칸의 중앙을 통과하는 가로선
 */
+
 .board-cell::after {
     content: "";
 
@@ -188,6 +377,8 @@ button:hover {
     transform: translateY(-50%);
 
     z-index: 0;
+
+    pointer-events: none;
 }
 
 
@@ -216,9 +407,13 @@ button:hover {
     border-radius: 50%;
 
     /*
-       돌이 바둑판 선보다 위에 표시됩니다.
+       돌 중심이 정확히
+       교차점에 오도록 합니다.
     */
+
     z-index: 2;
+
+    box-sizing: border-box;
 }
 
 
@@ -254,11 +449,41 @@ button:hover {
     background: rgba(0, 0, 0, 0.45);
 
     z-index: 3;
+
+    box-sizing: border-box;
 }
 
 
 /* =========================
-   반응형
+   결과
+   ========================= */
+
+.result-box {
+    width: min(92vw, 700px);
+
+    margin-top: 20px;
+
+    padding: 20px;
+
+    box-sizing: border-box;
+
+    background: white;
+
+    border: 1px solid #ddd;
+
+    border-radius: 10px;
+
+    text-align: center;
+}
+
+
+.result-box h2 {
+    margin-top: 0;
+}
+
+
+/* =========================
+   모바일
    ========================= */
 
 @media (max-width: 600px) {
@@ -267,21 +492,40 @@ button:hover {
         padding: 10px;
     }
 
+
     h1 {
         font-size: 24px;
     }
 
-    #roomArea {
-        width: 100%;
+
+    .room-box {
+        width: 90vw;
+
+        padding: 15px;
     }
+
 
     input,
     button {
         font-size: 14px;
     }
 
-    #gameInfo {
+
+    .game-info {
+        width: 92vw;
+
         font-size: 14px;
     }
+
+
+    .hint-box {
+        width: 92vw;
+
+        font-size: 14px;
+    }
+
+
+    #board {
+        width: 92vw;
+    }
 }
-```
