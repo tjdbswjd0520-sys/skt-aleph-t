@@ -1,177 +1,156 @@
-/* =========================
-   전체 페이지
-   ========================= */
+/* ==============================
+   전체 화면 기본 설정
+   ============================== */
 
-body {
-    margin: 0;
-    padding: 20px;
-
-    font-family: Arial, sans-serif;
-
-    background: #f5f5f5;
-
-    min-height: 100vh;
-
+* {
     box-sizing: border-box;
 }
 
-
-/* =========================
-   화면
-   ========================= */
-
-.screen {
+html,
+body {
+    margin: 0;
+    padding: 0;
     width: 100%;
+    min-height: 100%;
+}
+
+body {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
 
     display: flex;
     flex-direction: column;
     align-items: center;
 
-    box-sizing: border-box;
+    min-height: 100vh;
 }
 
 
-/*
-   hidden 클래스가 붙은 화면은
-   완전히 숨깁니다.
+/* ==============================
+   화면 기본 설정
+   ============================== */
 
-   game.js에서 화면을 전환할 때
-   이 클래스를 사용합니다.
-*/
+.screen {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 .hidden {
     display: none !important;
 }
 
 
-/* =========================
+/* ==============================
    제목
-   ========================= */
+   ============================== */
 
 h1 {
     margin: 10px 0 20px;
-
     text-align: center;
 }
 
 
-/* =========================
-   입력 영역
-   ========================= */
+/* ==============================
+   입력창
+   ============================== */
+
+input {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #bbb;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
 
 .input-area {
-    display: flex;
-    justify-content: center;
-
     margin-bottom: 20px;
 }
 
 
-input {
-    padding: 10px;
-
-    font-size: 16px;
-
-    border: 1px solid #aaa;
-    border-radius: 5px;
-
-    box-sizing: border-box;
-}
-
-
-/* =========================
-   방 생성 / 참가
-   ========================= */
+/* ==============================
+   방 만들기 / 방 참가 영역
+   ============================== */
 
 .room-box {
     width: min(90vw, 400px);
 
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
-    gap: 10px;
-
-    margin-bottom: 20px;
     padding: 20px;
-
-    box-sizing: border-box;
+    margin-bottom: 15px;
 
     background: white;
-
     border: 1px solid #ddd;
     border-radius: 10px;
-}
-
-
-.room-box h2 {
-    margin: 0 0 5px;
 
     text-align: center;
 }
 
+.room-box h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+
+/* ==============================
+   버튼
+   ============================== */
 
 button {
-    padding: 10px 15px;
+    padding: 10px 18px;
 
     font-size: 16px;
 
     border: none;
-    border-radius: 5px;
-
-    cursor: pointer;
+    border-radius: 6px;
 
     background: #333;
     color: white;
-}
 
+    cursor: pointer;
+}
 
 button:hover {
     background: #555;
 }
 
-
-/* =========================
-   로비 메시지
-   ========================= */
-
-#lobbyMessage {
-    text-align: center;
+button:active {
+    transform: scale(0.98);
 }
 
 
-/* =========================
+/* ==============================
    대기실
-   ========================= */
+   ============================== */
 
 .room-code-area {
     text-align: center;
 
+    padding: 15px 30px;
     margin-bottom: 20px;
-}
 
+    background: white;
+    border-radius: 10px;
+}
 
 .room-code-area p {
     margin: 5px 0;
 }
 
-
 #roomCodeDisplay {
     display: block;
 
-    font-size: 32px;
-
-    letter-spacing: 5px;
-
     margin: 10px 0;
-}
 
+    font-size: 32px;
+    letter-spacing: 5px;
+}
 
 .small-text {
-    font-size: 14px;
-
-    color: #666;
+    font-size: 13px;
+    color: #777;
 }
-
 
 #playerList {
     width: min(90vw, 400px);
@@ -179,53 +158,19 @@ button:hover {
     margin-bottom: 20px;
 }
 
-
-.player-item {
-    width: 100%;
-
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    padding: 10px;
-
-    margin-bottom: 5px;
-
-    box-sizing: border-box;
-
-    background: white;
-
-    border: 1px solid #ddd;
-    border-radius: 5px;
-}
-
-
-.host-label {
-    font-size: 13px;
-
-    color: #666;
-}
-
-
 .start-button {
-    margin-bottom: 15px;
+    margin-top: 10px;
 }
 
 
-#waitingMessage {
-    text-align: center;
-}
-
-
-/* =========================
+/* ==============================
    게임 정보
-   ========================= */
+   ============================== */
 
 .game-info {
     width: min(92vw, 700px);
 
     display: flex;
-
     justify-content: space-between;
     align-items: center;
 
@@ -233,57 +178,52 @@ button:hover {
 
     margin-bottom: 15px;
 
-    flex-wrap: wrap;
+    font-size: 14px;
 }
 
 
-/* =========================
+/* ==============================
    힌트
-   ========================= */
+   ============================== */
 
 .hint-box {
     width: min(92vw, 700px);
 
     margin-bottom: 15px;
-
     padding: 15px;
 
-    box-sizing: border-box;
-
     background: white;
-
     border: 1px solid #ddd;
-
     border-radius: 10px;
 
     text-align: center;
 }
 
-
 .hint-box h2 {
     margin-top: 0;
 }
 
-
 .hint {
-    margin: 8px 0;
+    display: inline-block;
 
-    font-weight: bold;
+    margin: 5px;
+    padding: 8px 12px;
+
+    background: #eee;
+    border-radius: 6px;
 }
-
 
 .hint-warning {
     margin-bottom: 0;
 
-    font-size: 14px;
-
+    font-size: 13px;
     color: #777;
 }
 
 
-/* =========================
-   오목판 바깥 영역
-   ========================= */
+/* ==================================================
+   바둑판
+   ================================================== */
 
 .board-wrapper {
     width: 100%;
@@ -291,54 +231,41 @@ button:hover {
     display: flex;
     justify-content: center;
     align-items: center;
-
-    box-sizing: border-box;
-
-    overflow: visible;
 }
 
 
-/* =========================
-   오목판
-   ========================= */
+/*
+   실제 바둑판
+
+   19 × 19 칸을 정확하게 만듭니다.
+*/
 
 #board {
     width: min(92vw, 700px);
-
     aspect-ratio: 1 / 1;
 
     display: grid;
 
-    grid-template-columns: repeat(19, 1fr);
-    grid-template-rows: repeat(19, 1fr);
+    grid-template-columns: repeat(19, minmax(0, 1fr));
+    grid-template-rows: repeat(19, minmax(0, 1fr));
+
+    position: relative;
+
+    box-sizing: border-box;
 
     background-color: #d9b36c;
 
     border: 3px solid #5c421f;
 
-    box-sizing: border-box;
-
-    position: relative;
+    overflow: hidden;
 
     flex-shrink: 0;
-
-    overflow: hidden;
 }
 
 
-/* =========================
-   오목판의 위치
-   ========================= */
-
-/*
-   중요
-
-   game.js에서는 각각의 위치를
-   "cell"이라는 클래스 이름으로 만듭니다.
-
-   따라서 .board-cell이 아니라
-   .cell을 사용해야 합니다.
-*/
+/* ==================================================
+   바둑판의 각각의 칸
+   ================================================== */
 
 .cell {
     position: relative;
@@ -346,109 +273,64 @@ button:hover {
     min-width: 0;
     min-height: 0;
 
-    border: none;
+    width: auto;
+    height: auto;
 
     box-sizing: border-box;
 
     cursor: pointer;
+
+    /*
+       기존 CSS에서 바둑판 선을 만들기 위해
+       사용하던 border/pseudo-element를 제거합니다.
+    */
+    border: none;
+
+    background: transparent;
 }
 
 
-/* =========================
-   세로선
-   ========================= */
-
 /*
-   각각의 cell 중앙을 세로선이
-   지나가도록 합니다.
-
-   따라서 돌의 중심과
-   세로선이 정확히 일치합니다.
+   기존 .cell::before / .cell::after가
+   바둑판을 이상하게 만드는 것을 방지합니다.
 */
 
-.cell::before {
-    content: "";
-
-    position: absolute;
-
-    left: 50%;
-    top: 0;
-
-    width: 1px;
-    height: 100%;
-
-    background-color: #79552a;
-
-    transform: translateX(-50%);
-
-    z-index: 0;
-
-    pointer-events: none;
-}
-
-
-/* =========================
-   가로선
-   ========================= */
-
-/*
-   각각의 cell 중앙을 가로선이
-   지나가도록 합니다.
-
-   따라서 돌의 중심과
-   가로선이 정확히 일치합니다.
-*/
-
+.cell::before,
 .cell::after {
-    content: "";
-
-    position: absolute;
-
-    left: 0;
-    top: 50%;
-
-    width: 100%;
-    height: 1px;
-
-    background-color: #79552a;
-
-    transform: translateY(-50%);
-
-    z-index: 0;
-
-    pointer-events: none;
+    content: none !important;
 }
 
 
-/* =========================
+/* ==================================================
    돌
-   ========================= */
+   ================================================== */
 
 .stone {
+    /*
+       중요:
+       absolute의 위치 기준을 .cell로 잡습니다.
+    */
     position: absolute;
 
     width: 76%;
     height: 76%;
 
-    left: 12%;
-    top: 12%;
+    left: 50%;
+    top: 50%;
+
+    transform: translate(-50%, -50%);
 
     border-radius: 50%;
 
     box-sizing: border-box;
 
-    /*
-       선보다 돌이 위에 표시됩니다.
-    */
     z-index: 2;
 
     pointer-events: none;
 }
 
 
-/* =========================
-   흰 돌
-   ========================= */
+/* 흰색 돌 */
 
 .white-stone {
     background: white;
@@ -460,14 +342,9 @@ button:hover {
 }
 
 
-/* =========================
-   선택 위치
-   ========================= */
-
-/*
-   game.js에서 사용하는 실제 클래스명:
-   selected-marker
-*/
+/* ==================================================
+   현재 선택 위치 표시
+   ================================================== */
 
 .selected-marker {
     position: absolute;
@@ -475,8 +352,10 @@ button:hover {
     width: 35%;
     height: 35%;
 
-    left: 32.5%;
-    top: 32.5%;
+    left: 50%;
+    top: 50%;
+
+    transform: translate(-50%, -50%);
 
     border-radius: 50%;
 
@@ -490,37 +369,76 @@ button:hover {
 }
 
 
-/* =========================
-   결과
-   ========================= */
+/* ==================================================
+   바둑판 선
+   ==================================================
+
+   19개의 가로선 + 19개의 세로선을 만듭니다.
+*/
+
+#board {
+    background-image:
+
+        /* 세로선 */
+        linear-gradient(
+            to right,
+            #79552a 0,
+            #79552a 1px,
+            transparent 1px,
+            transparent 100%
+        ),
+
+        /* 가로선 */
+        linear-gradient(
+            to bottom,
+            #79552a 0,
+            #79552a 1px,
+            transparent 1px,
+            transparent 100%
+        );
+
+    /*
+       19개의 선이 동일한 간격으로 나오도록 합니다.
+    */
+    background-size:
+        calc(100% / 19) calc(100% / 19),
+        calc(100% / 19) calc(100% / 19);
+
+    /*
+       선을 각 칸의 가운데에 맞춥니다.
+    */
+    background-position:
+        calc(100% / 38) calc(100% / 38),
+        calc(100% / 38) calc(100% / 38);
+}
+
+
+/* ==================================================
+   게임 결과
+   ================================================== */
 
 .result-box {
     width: min(92vw, 700px);
 
     margin-top: 20px;
-
     padding: 20px;
-
-    box-sizing: border-box;
 
     background: white;
 
     border: 1px solid #ddd;
-
     border-radius: 10px;
 
     text-align: center;
 }
-
 
 .result-box h2 {
     margin-top: 0;
 }
 
 
-/* =========================
-   모바일
-   ========================= */
+/* ==================================================
+   모바일 화면
+   ================================================== */
 
 @media (max-width: 600px) {
 
@@ -528,40 +446,31 @@ button:hover {
         padding: 10px;
     }
 
-
     h1 {
         font-size: 24px;
+        margin: 8px 0 15px;
     }
-
-
-    .room-box {
-        width: 90vw;
-
-        padding: 15px;
-    }
-
-
-    input,
-    button {
-        font-size: 14px;
-    }
-
 
     .game-info {
         width: 92vw;
 
-        font-size: 14px;
-    }
+        flex-direction: column;
 
+        gap: 5px;
+
+        text-align: center;
+    }
 
     .hint-box {
         width: 92vw;
-
-        font-size: 14px;
     }
 
-
     #board {
+        width: 92vw;
+        aspect-ratio: 1 / 1;
+    }
+
+    .room-box {
         width: 92vw;
     }
 }
