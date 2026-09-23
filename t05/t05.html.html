@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>2단계 개선 프로토타입 - 작은 사진 삽입</title>
+<style>
+  :root{
+    --bg:#f6f4ef; --panel:#fff; --ink:#2b2b2b; --sub:#7a756c; --accent:#c96f4a; --line:#e6e1d8;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --bg:#1c1a17; --panel:#26231f; --ink:#f1ede6; --sub:#a89f92; --accent:#e08a5f; --line:#3a352e; }
+  }
+  :root[data-theme="dark"]{ --bg:#1c1a17; --panel:#26231f; --ink:#f1ede6; --sub:#a89f92; --accent:#e08a5f; --line:#3a352e; }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    padding-top:env(safe-area-inset-top,0); padding-bottom:env(safe-area-inset-bottom,0);
+  }
+  header{padding:20px 16px 6px; text-align:center;}
+  header h1{margin:0 0 4px; font-size:1.15rem;}
+  header p{margin:0; color:var(--sub); font-size:.85rem;}
+  .badge{display:inline-block; margin-top:8px; padding:3px 10px; border-radius:20px; background:var(--accent); color:#fff; font-size:.72rem;}
+  .wrap{max-width:760px; margin:0 auto; padding:16px; display:flex; flex-direction:column; gap:14px;}
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px;}
+  .panel h2{margin:0 0 10px; font-size:.9rem; color:var(--sub); font-weight:600;}
+  .row{display:flex; flex-wrap:wrap; gap:8px; align-items:center;}
+  button, label.btn{
+    background:var(--accent); color:#fff; border:none; padding:8px 14px; border-radius:8px;
+    font-size:.82rem; cursor:pointer;
+  }
+  button.ghost{background:transparent; color:var(--ink); border:1px solid var(--line);}
+  input[type=file]{display:none;}
+  #stage{
+    position:relative; width:100%; aspect-ratio:4/3; background:repeating-conic-gradient(#ddd 0% 25%, #eee 0% 50%) 0/20px 20px;
+    border-radius:10px; overflow:hidden; border:1px solid var(--line);
+  }
+  #bg{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:none;}
+  .layer{position:absolute; cursor:grab; touch-action:none; user-select:none;}
+  .layer.text{color:#fff; font-weight:700; font-size:22px; text-shadow:0 1px 4px rgba(0,0,0,.5); white-space:nowrap;}
+  .layer.image{border:2px solid #fff; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,.35); touch-action:none;}
+  .layer.image img{width:100%; height:100%; object-fit:cover; display:block; border-radius:4px;}
+  .layer .handle{
+    position:absolute; right:-8px; bottom:-8px; width:16px; height:16px; background:var(--accent);
+    border:2px solid #fff; border-radius:50%; cursor:se-resize;
+  }
+  .layer.selected{outline:2px dashed var(--accent);}
+  .empty-msg{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--sub); font-size:.85rem; text-align:center; padding:20px;}
+  .checklist{font-size:.8rem; color:var(--sub); line-height:1.7;}
+  .checklist b{color:var(--ink);}
+  footer{text-align:center; color:var(--sub); font-size:.75rem; padding:10px 16px 24px;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>사진 편집기 — 2단계 개선 프로토타입</h1>
+  <p>2단계(글자 추가 · 필터)에 '작은 사진 삽입' 기능을 추가하는 작업입니다.</p>
+  <span class="badge">체크리스트 5/10 완료 시점 · 여기서 중단</span>
+</header>
+
+<div class="wrap">
+
+  <div class="panel">
+    <h2>1. 배경 사진</h2>
+    <div class="row">
+      <label class="btn" for="bgInput">사진 선택</label>
+      <input type="file" id="bgInput" accept="image/*">
+      <span id="bgStatus" style="color:var(--sub); font-size:.8rem;">선택된 사진 없음</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>2. 글자 · 작은 사진 추가 (개선 대상 단계)</h2>
+    <div class="row">
+      <button id="addText">+ 글자 추가</button>
+      <label class="btn" for="smallImgInput">+ 작은 사진 삽입 (NEW)</label>
+      <input type="file" id="smallImgInput" accept="image/*">
+      <button class="ghost" id="removeLayer">선택 레이어 삭제</button>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <button class="ghost" data-filter="none">원본</button>
+      <button class="ghost" data-filter="grayscale(100%)">흑백</button>
+      <button class="ghost" data-filter="sepia(80%)">세피아</button>
+      <button class="ghost" data-filter="contrast(140%)">대비 증가</button>
+    </div>
+  </div>
+
+  <div id="stage">
+    <img id="bg" alt="배경 사진">
+    <div class="empty-msg" id="emptyMsg">먼저 배경 사진을 선택하세요</div>
+  </div>
+
+  <div class="panel checklist">
+    <h2>이번 체크포인트에서 반영된 항목</h2>
+    ✅ <b>1. 요구사항 정의</b> — 작은 사진은 자유 이동·크기조절 가능, 개수 제한 없음, 기본 크기는 배경의 25%<br>
+    ✅ <b>2. UI 배치 설계</b> — '작은 사진 삽입' 버튼을 기존 '글자 추가' 옆에 배치<br>
+    ✅ <b>3. 레이어 데이터 구조</b> — 텍스트/이미지 레이어를 동일한 layer 배열로 통합 관리<br>
+    ✅ <b>4. 렌더링 구현</b> — 작은 사진이 스테이지 위에 실제로 표시됨<br>
+    ✅ <b>5. 드래그·크기조절 구현</b> — 우측 하단 핸들로 크기조절, 본체 드래그로 이동<br>
+    <br>
+    ⏳ 다음 단계(다른 AI가 이어받을 부분): 필터가 삽입 사진에도 적용될지 결정 및 구현(6), 레이어 겹침 순서 검증(7), 다운로드 결과 반영 확인(8), 비율 전환 시 정합성(9), 모바일 터치 최종 검증(10)
+  </div>
+
+</div>
+
+<footer>프로토타입 · 실제 사이트 소스 미반영 · 체크리스트 6~10번은 후속 작업</footer>
+
+<script>
+const stage = document.getElementById('stage');
+const bg = document.getElementById('bg');
+const emptyMsg = document.getElementById('emptyMsg');
+const bgStatus = document.getElementById('bgStatus');
+let layers = []; // 데이터 구조: {id, type:'text'|'image', el}
+let selected = null;
+
+document.getElementById('bgInput').addEventListener('change', e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const url = URL.createObjectURL(f);
+  bg.src = url; bg.style.display='block'; emptyMsg.style.display='none';
+  bgStatus.textContent = f.name;
+});
+
+document.getElementById('addText').addEventListener('click', ()=>{
+  if(!bg.src){ alert('먼저 배경 사진을 선택하세요'); return; }
+  const el = document.createElement('div');
+  el.className='layer text'; el.textContent='텍스트';
+  el.style.left='20px'; el.style.top='20px';
+  stage.appendChild(el);
+  makeDraggable(el);
+  registerLayer('text', el);
+});
+
+document.getElementById('smallImgInput').addEventListener('change', e=>{
+  if(!bg.src){ alert('먼저 배경 사진을 선택하세요'); return; }
+  const f = e.target.files[0]; if(!f) return;
+  const url = URL.createObjectURL(f);
+  const el = document.createElement('div');
+  el.className='layer image';
+  el.style.left='30px'; el.style.top='30px';
+  el.style.width='25%'; el.style.aspectRatio='1/1';
+  el.innerHTML = `<img src="${url}"><div class="handle"></div>`;
+  stage.appendChild(el);
+  makeDraggable(el, true);
+  registerLayer('image', el);
+  e.target.value='';
+});
+
+document.querySelectorAll('[data-filter]').forEach(b=>{
+  b.addEventListener('click', ()=> bg.style.filter = b.dataset.filter);
+});
+
+document.getElementById('removeLayer').addEventListener('click', ()=>{
+  if(!selected) return;
+  selected.el.remove();
+  layers = layers.filter(l=>l!==selected);
+  selected=null;
+});
+
+function registerLayer(type, el){
+  const layer = {id:Date.now()+Math.random(), type, el};
+  layers.push(layer);
+  el.addEventListener('pointerdown', ()=>{
+    layers.forEach(l=>l.el.classList.remove('selected'));
+    el.classList.add('selected');
+    selected = layer;
+  });
+}
+
+function makeDraggable(el, resizable){
+  let dragging=false, resizing=false, startX,startY,startLeft,startTop,startW,startH;
+  el.addEventListener('pointerdown', e=>{
+    if(e.target.classList.contains('handle')){ resizing=true; }
+    else { dragging=true; }
+    startX=e.clientX; startY=e.clientY;
+    startLeft=el.offsetLeft; startTop=el.offsetTop;
+    startW=el.offsetWidth; startH=el.offsetHeight;
+    el.setPointerCapture(e.pointerId);
+  });
+  el.addEventListener('pointermove', e=>{
+    if(dragging){
+      el.style.left = (startLeft + e.clientX - startX)+'px';
+      el.style.top = (startTop + e.clientY - startY)+'px';
+    } else if(resizing){
+      const newW = Math.max(30, startW + (e.clientX-startX));
+      el.style.width = newW+'px';
+    }
+  });
+  el.addEventListener('pointerup', ()=>{ dragging=false; resizing=false; });
+}
+</script>
+</body>
+</html>
