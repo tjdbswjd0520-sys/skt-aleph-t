@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan Do See — 새 미리보기</title>
+<style>
+:root {
+  --site-primary: #5B467F;
+  --site-on-primary: #FFFFFF;
+  --site-secondary: #E9E3F5;
+  --site-on-secondary: #352B4B;
+  --site-background: #F7F5FB;
+  --site-on-background: #292536;
+  --site-font-body: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --site-font-heading: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --site-heading-scale: 1;
+  --site-spacing-scale: 1;
+  --site-radius-scale: 1;
+  --site-decoration-opacity: 1;
+  --surface: light-dark(#FFFFFF, #211F29);
+  --surface-soft: light-dark(#F0ECF8, #302B3A);
+  --muted: light-dark(#777184, #BDB6CA);
+  --line: light-dark(#E8E2F0, #423B4D);
+  color-scheme: light dark;
+}
+* { box-sizing: border-box; }
+body { margin:0; font-family:var(--site-font-body); background:var(--site-background); color:var(--site-on-background); }
+button,input,textarea,select { font:inherit; }
+button { cursor:pointer; }
+.app { min-height:100vh; width:100%; border-radius:0; background-color:var(--site-background); color:var(--site-on-background); }
+.topbar { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:18px clamp(18px,4vw,54px); border-bottom:1px solid var(--line); background:var(--surface); }
+.brand { display:flex; align-items:center; gap:11px; font-weight:800; letter-spacing:-.5px; }
+.brand-mark { display:grid; place-items:center; width:38px; height:38px; flex:0 0 38px; border-radius:13px; background:var(--site-primary); color:#FFFFFF !important; font-size:17px; }
+.brand small { display:block; color:var(--muted); font-size:11px; font-weight:500; letter-spacing:1.6px; margin-top:3px; }
+.top-right { display:flex; align-items:center; gap:12px; }
+.user-label { color:var(--muted); font-size:13px; }
+.btn { border:0; border-radius:12px; padding:11px 16px; background:var(--site-primary); color:#FFFFFF !important; font-weight:700; transition:transform .15s,opacity .15s; }
+.btn:hover { opacity:.9; transform:translateY(-1px); }
+.btn.secondary { background:var(--site-secondary); color:var(--site-on-secondary) !important; }
+.btn.ghost { background:transparent; color:var(--muted) !important; border:1px solid var(--line); }
+.btn.small { padding:8px 11px; font-size:12px; border-radius:9px; }
+main { max-width:1120px; margin:0 auto; padding:36px 22px 64px; }
+.welcome { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom:28px; }
+.eyebrow { color:var(--site-primary); font-size:12px; font-weight:800; letter-spacing:1.6px; text-transform:uppercase; }
+h1 { font-family:var(--site-font-heading); font-size:calc(34px * var(--site-heading-scale)); letter-spacing:-1.5px; line-height:1.25; margin:9px 0 8px; }
+.subtitle { color:var(--muted); margin:0; line-height:1.7; font-size:14px; }
+.date-chip { white-space:nowrap; padding:12px 15px; border:1px solid var(--line); background:var(--surface); border-radius:14px; font-size:13px; color:var(--muted); }
+.date-chip strong { color:var(--site-on-background); }
+.stats { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:24px; }
+.stat { padding:20px; border-radius:18px; background:var(--surface); border:1px solid var(--line); }
+.stat-top { display:flex; justify-content:space-between; align-items:center; color:var(--muted); font-size:12px; }
+.stat-icon { display:grid; place-items:center; width:32px; height:32px; border-radius:11px; background:var(--site-secondary); color:var(--site-on-secondary); font-size:15px; }
+.stat-number { font-size:27px; font-weight:800; letter-spacing:-1px; margin:13px 0 3px; }
+.stat-foot { font-size:12px; color:var(--muted); }
+.workspace { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(270px,.8fr); gap:20px; align-items:start; }
+.panel { background:var(--surface); border:1px solid var(--line); border-radius:20px; overflow:hidden; }
+.panel-head { padding:21px 22px 16px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.panel-head h2 { font-size:17px; margin:0; letter-spacing:-.4px; }
+.panel-head p { color:var(--muted); font-size:12px; margin:5px 0 0; }
+.tabs { display:flex; gap:5px; padding:5px; background:var(--surface-soft); border-radius:12px; }
+.tab { border:0; background:transparent; color:var(--muted); padding:8px 12px; border-radius:9px; font-size:12px; font-weight:700; }
+.tab.active { background:var(--surface); color:var(--site-primary); box-shadow:0 2px 8px #2925360b; }
+.editor { padding:0 22px 22px; }
+.field-label { display:block; font-size:12px; font-weight:800; margin:15px 0 8px; }
+.input,textarea,select { width:100%; color:var(--site-on-background); background:var(--surface); border:1px solid var(--line); border-radius:11px; padding:12px 13px; outline:none; }
+.input:focus,textarea:focus,select:focus { border-color:var(--site-primary); box-shadow:0 0 0 3px color-mix(in srgb,var(--site-primary) 14%,transparent); }
+textarea { resize:vertical; min-height:100px; line-height:1.7; }
+.inline-fields { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.save-row { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:18px; }
+.hint { color:var(--muted); font-size:11px; line-height:1.6; }
+.task-list { display:grid; gap:9px; margin-top:12px; }
+.task { display:flex; align-items:center; gap:10px; padding:11px 12px; background:var(--surface-soft); border-radius:11px; font-size:13px; }
+.task input { accent-color:var(--site-primary); width:16px; height:16px; }
+.task.done span { text-decoration:line-through; color:var(--muted); }
+.task button { margin-left:auto; border:0; background:transparent; color:var(--muted); font-size:16px; }
+.side-column { display:grid; gap:20px; }
+.progress-card { padding:22px; background:var(--site-primary); color:#FFFFFF !important; border-radius:20px; }
+.progress-card, .progress-card * { color:#FFFFFF !important; }
+.progress-card .progress-track { background:rgba(255,255,255,.28); }
+.progress-title { font-weight:800; font-size:15px; }
+.progress-number { display:flex; align-items:baseline; gap:5px; margin:18px 0 12px; }
+.progress-number strong { font-size:34px; letter-spacing:-1.5px; }
+.progress-track { height:8px; background:rgba(255,255,255,.28); border-radius:20px; overflow:hidden; }
+.progress-fill { height:100%; background:#E9E3F5; border-radius:20px; width:0%; transition:width .25s; }
+.progress-caption { font-size:12px; opacity:.9; margin-top:11px; line-height:1.6; }
+.history-list { padding:0 18px 18px; display:grid; gap:9px; }
+.history-item { width:100%; text-align:left; display:flex; gap:12px; padding:13px; border:1px solid var(--line); border-radius:13px; background:var(--surface); color:var(--site-on-background); }
+.history-date { width:42px; min-width:42px; height:44px; border-radius:11px; display:grid; place-items:center; align-content:center; background:var(--surface-soft); }
+.history-date strong { font-size:16px; }
+.history-date span { font-size:9px; color:var(--muted); }
+.history-copy { min-width:0; flex:1; }
+.history-copy strong { display:block; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.history-copy small { display:block; margin-top:5px; color:var(--muted); font-size:11px; line-height:1.5; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.empty { text-align:center; padding:24px 12px; color:var(--muted); font-size:12px; line-height:1.8; }
+footer { text-align:center; padding:18px; color:var(--muted); font-size:11px; }
+.modal-backdrop { position:fixed; inset:0; background:#17132399; display:grid; place-items:center; padding:18px; z-index:10; }
+.modal { width:min(430px,100%); background:var(--surface); color:var(--site-on-background); border:1px solid var(--line); border-radius:22px; padding:28px; box-shadow:0 25px 80px #17132335; }
+.modal h2 { margin:0 0 8px; font-size:24px; letter-spacing:-.7px; }
+.modal p { color:var(--muted); font-size:13px; line-height:1.7; margin:0 0 18px; }
+.modal-tabs { display:grid; grid-template-columns:1fr 1fr; gap:6px; background:var(--surface-soft); padding:5px; border-radius:12px; margin-bottom:18px; }
+.modal-tabs button { border:0; background:transparent; color:var(--muted); padding:10px; border-radius:9px; font-weight:700; }
+.modal-tabs button.active { background:var(--surface); color:var(--site-primary); }
+.hidden { display:none !important; }
+@media (max-width:760px) { .workspace { grid-template-columns:1fr; } .welcome { align-items:flex-start; flex-direction:column; } .stats { gap:9px; } .stat { padding:14px; } .stat-number { font-size:22px; } .stat-foot { font-size:10px; } .panel-head { align-items:flex-start; flex-direction:column; } .topbar { padding:14px 17px; } .user-label { display:none; } main { padding:26px 15px 45px; } h1 { font-size:30px; } }
+@media (max-width:420px) { .stats { grid-template-columns:1fr; } .stat { display:flex; align-items:center; gap:12px; } .stat-number { margin:0 0 0 auto; } .stat-foot { display:none; } .inline-fields { grid-template-columns:1fr; gap:0; } .tabs { width:100%; } .tab { flex:1; } .save-row { align-items:flex-start; flex-direction:column; } }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark">P.</div><div>plan do see<small>MAKE SPACE FOR YOURSELF</small></div></div>
+    <div class="top-right"><span class="user-label" id="userLabel">나만의 하루를 기록해요</span><button class="btn ghost small hidden" id="logoutBtn">로그아웃</button><button class="btn small" id="loginBtn">로그인 / 가입</button></div>
+  </header>
+  <main>
+    <section class="welcome"><div><div class="eyebrow">YOUR DAILY SPACE</div><h1><span id="greeting">오늘의 나를 위한</span><br>작은 한 페이지.</h1><p class="subtitle">계획하고, 실행하고, 돌아보는 시간.<br>완벽한 하루보다 나다운 하루를 만들어 보세요.</p></div><div class="date-chip" id="todayChip"></div></section>
+    <section class="stats">
+      <div class="stat"><div><div class="stat-top">오늘의 계획 <span class="stat-icon">✦</span></div><div class="stat-foot">차근차근, 하나씩</div></div><div class="stat-number" id="planCount">0개</div></div>
+      <div class="stat"><div><div class="stat-top">완료한 일 <span class="stat-icon">✓</span></div><div class="stat-foot">작은 성취도 소중하게</div></div><div class="stat-number" id="doneCount">0개</div></div>
+      <div class="stat"><div><div class="stat-top">기록한 날 <span class="stat-icon">♡</span></div><div class="stat-foot">나를 알아가는 기록</div></div><div class="stat-number" id="daysCount">0일</div></div>
+    </section>
+    <section class="workspace">
+      <div class="panel">
+        <div class="panel-head"><div><h2>오늘의 다이어리</h2><p>지금의 생각과 마음을 자유롭게 적어보세요.</p></div><div class="tabs" role="tablist"><button type="button" class="tab active" data-tab="plan">01 Plan</button><button type="button" class="tab" data-tab="do">02 Do</button><button type="button" class="tab" data-tab="see">03 See</button></div></div>
+        <div class="editor">
+          <div id="planPanel"><label class="field-label" for="planTitle">오늘의 가장 중요한 목표</label><input class="input" id="planTitle" placeholder="예: 나를 위해 30분 공부하기"><label class="field-label" for="taskInput">오늘의 할 일</label><div style="display:flex;gap:8px"><input class="input" id="taskInput" placeholder="할 일을 입력하고 추가하세요"><button class="btn" id="addTaskBtn">추가</button></div><div class="task-list" id="taskList"></div><div class="inline-fields"><div><label class="field-label" for="priority">오늘의 우선순위</label><select id="priority"><option>보통</option><option>높음</option><option>여유롭게</option></select></div><div><label class="field-label" for="planNote">계획 메모</label><input class="input" id="planNote" placeholder="잊지 말아야 할 것"></div></div></div>
+          <div id="doPanel" class="hidden"><label class="field-label" for="doText">오늘 실제로 한 일</label><textarea id="doText" placeholder="계획대로 되지 않아도 괜찮아요. 오늘 내가 해낸 일을 적어보세요."></textarea><label class="field-label" for="doMood">오늘의 컨디션</label><select id="doMood"><option>😊 좋아요</option><option>🙂 무난해요</option><option>😮‍💨 조금 지쳐요</option><option>🌧️ 힘든 하루예요</option><option>✨ 뿌듯해요</option></select><p class="hint" style="margin-top:10px">작은 행동도 기록하면 다음 걸음을 위한 힌트가 돼요.</p></div>
+          <div id="seePanel" class="hidden"><label class="field-label" for="seeText">오늘의 회고</label><textarea id="seeText" placeholder="오늘 잘한 점은 무엇인가요? 내일 조금 다르게 해보고 싶은 것은요?"></textarea><label class="field-label" for="gratitude">오늘 감사했던 한 가지</label><input class="input" id="gratitude" placeholder="아주 작은 일이어도 좋아요."><label class="field-label" for="tomorrow">내일의 나에게</label><input class="input" id="tomorrow" placeholder="짧은 응원 한마디를 남겨보세요."></div>
+          <div class="save-row"><span class="hint" id="saveStatus">로그인하면 계정에 기록이 저장됩니다.</span><button class="btn" id="saveBtn">오늘 기록 저장</button></div>
+        </div>
+      </div>
+      <aside class="side-column"><div class="progress-card"><div class="progress-title">오늘의 작은 성취 🌱</div><div class="progress-number"><strong id="progressPercent">0%</strong><span>완료</span></div><div class="progress-track"><div class="progress-fill" id="progressFill"></div></div><div class="progress-caption" id="progressCaption">할 일을 추가하고 하나씩 완료해 보세요.</div></div><div class="panel"><div class="panel-head"><div><h2>나의 기록</h2><p>날짜를 눌러 지난 기록을 다시 볼 수 있어요.</p></div></div><div class="history-list" id="historyList"></div></div></aside>
+    </section>
+  </main>
+  <footer>PLAN WITH INTENTION · DO WITH CARE · SEE WITH KINDNESS</footer>
+</div>
+  <div class="modal-backdrop hidden" id="authModal"><div class="modal"><div class="brand" style="margin-bottom:23px"><div class="brand-mark">P.</div><div>plan do see<small>YOUR PERSONAL DIARY</small></div></div><h2 id="authTitle">나만의 하루를 시작해요.</h2><p id="authDesc">이메일과 비밀번호를 입력해 주세요.</p><div class="modal-tabs"><button class="active" data-auth="login">로그인</button><button data-auth="signup">회원가입</button></div><form id="authForm"><label class="field-label" for="authUsername">이메일</label><input class="input" id="authUsername" type="email" autocomplete="off" placeholder="가입한 이메일 주소" required><label class="field-label" for="authPassword">비밀번호</label><input class="input" id="authPassword" type="password" autocomplete="off" placeholder="비밀번호를 입력하세요" minlength="6" required><div class="hint" style="margin:12px 0 18px">Supabase에 가입한 이메일 주소와 비밀번호를 입력해 주세요.</div><button type="submit" class="btn" id="authSubmit" style="width:100%;margin-bottom:9px">로그인</button></form><button type="button" class="btn secondary" id="demoBtn" style="width:100%">로그인 없이 둘러보기</button></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const $ = id => document.getElementById(id);
+const SUPABASE_URL = 'https://apwourkeqiafttfpkzeq.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_lxnAUGFHQ5Br9ZiALMXSfA_4MUBGP5i';
+const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+const now = new Date();
+const dateKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const todayKey = dateKey(now);
+$('todayChip').innerHTML = `<strong>${now.toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'short'})}</strong> · ${now.getFullYear()}`;
+let diary = blankDiary();
+let records = JSON.parse(localStorage.getItem('pds_preview_records') || '{}');
+let activeTab = 'plan';
+let authUser = null;
+let cloudMode = false;
+let readOnlyMode = true;
+const OWNER_UID = 'f3c5f4e6-d248-4f72-933b-3be14f1cd42e';
+let currentRecordKey = todayKey;
+function blankDiary(){return {title:'',tasks:[],priority:'보통',planNote:'',doText:'',doMood:'😊 좋아요',seeText:'',gratitude:'',tomorrow:''};}
+function captureForm(){diary.title=$('planTitle').value;diary.priority=$('priority').value;diary.planNote=$('planNote').value;diary.doText=$('doText').value;diary.doMood=$('doMood').value;diary.seeText=$('seeText').value;diary.gratitude=$('gratitude').value;diary.tomorrow=$('tomorrow').value;}
+function fillForm(){ $('planTitle').value=diary.title||''; $('priority').value=diary.priority||'보통'; $('planNote').value=diary.planNote||''; $('doText').value=diary.doText||''; $('doMood').value=diary.doMood||'😊 좋아요'; $('seeText').value=diary.seeText||''; $('gratitude').value=diary.gratitude||''; $('tomorrow').value=diary.tomorrow||''; }
+async function saveDiary(){if(!cloudMode||!authUser){$('saveStatus').textContent='둘러보기 모드에서는 기록을 읽을 수만 있어요. 수정하려면 소유자가 로그인해야 합니다.';return;}captureForm();const key=currentRecordKey||todayKey;records[key]=JSON.parse(JSON.stringify(diary));localStorage.setItem('pds_preview_records',JSON.stringify(records));renderStats();renderHistory();if(cloudMode&&authUser){const row={user_id:authUser.id,diary_date:key,title:diary.title||'',tasks:diary.tasks||[],priority:diary.priority||'보통',plan_note:diary.planNote||'',do_text:diary.doText||'',do_mood:diary.doMood||'😊 좋아요',see_text:diary.seeText||'',gratitude:diary.gratitude||'',tomorrow:diary.tomorrow||'',updated_at:new Date().toISOString()};const {error}=await supabaseClient.from('diaries').upsert(row,{onConflict:'user_id,diary_date'});if(error){$('saveStatus').textContent='클라우드 저장 실패: '+error.message;alert('Supabase에 저장하지 못했습니다. diaries 테이블의 열 이름과 RLS 정책을 확인해 주세요.\n'+error.message);return;}$('saveStatus').textContent='오늘의 기록을 계정에 안전하게 저장했어요.';}}
+function rowToDiary(row){return {title:row.title||'',tasks:Array.isArray(row.tasks)?row.tasks:[],priority:row.priority||'보통',planNote:row.plan_note||'',doText:row.do_text||'',doMood:row.do_mood||'😊 좋아요',seeText:row.see_text||'',gratitude:row.gratitude||'',tomorrow:row.tomorrow||''};}
+async function loadCloudRecords(){if(!supabaseClient||!authUser)return;const {data,error}=await supabaseClient.from('diaries').select('diary_date,title,tasks,priority,plan_note,do_text,do_mood,see_text,gratitude,tomorrow').eq('user_id',authUser.id).order('diary_date',{ascending:false});if(error){$('saveStatus').textContent='기록을 불러오지 못했습니다: '+error.message;alert('기록을 불러오지 못했습니다. diaries 테이블과 RLS 정책을 확인해 주세요.\n'+error.message);return;}records={};for(const row of data||[]){records[row.diary_date]=rowToDiary(row);}localStorage.setItem('pds_preview_records',JSON.stringify(records));currentRecordKey=todayKey;diary=records[todayKey]?JSON.parse(JSON.stringify(records[todayKey])):blankDiary();fillForm();renderTasks();renderStats();renderHistory();$('saveStatus').textContent='로그인한 계정의 기록을 불러왔어요.';}
+async function deleteRecord(key){if(readOnlyMode||!authUser||!cloudMode){$('saveStatus').textContent='둘러보기 모드에서는 기록을 삭제할 수 없습니다. 소유자가 로그인해야 합니다.';return;}if(!confirm(`${key} 기록을 삭제할까요? 이 작업은 되돌릴 수 없습니다.`))return;if(cloudMode&&authUser){const {error}=await supabaseClient.from('diaries').delete().eq('user_id',authUser.id).eq('diary_date',key);if(error){alert('기록을 삭제하지 못했습니다: '+error.message);return;}}delete records[key];localStorage.setItem('pds_preview_records',JSON.stringify(records));if(currentRecordKey===key){currentRecordKey=todayKey;diary=records[todayKey]?JSON.parse(JSON.stringify(records[todayKey])):blankDiary();fillForm();renderTasks();}renderStats();renderHistory();}
+function renderTasks(){const list=$('taskList');list.innerHTML='';if(!diary.tasks.length){list.innerHTML='<div class="hint" style="padding:5px 2px">아직 할 일이 없어요. 작은 일부터 추가해 보세요.</div>';renderStats();return;}diary.tasks.forEach((task,i)=>{const row=document.createElement('div');row.className='task'+(task.done?' done':'');const check=document.createElement('input');check.type='checkbox';check.checked=!!task.done;check.setAttribute('aria-label',task.text+' 완료');check.disabled=readOnlyMode||!authUser||!cloudMode;check.addEventListener('change',()=>{if(readOnlyMode||!authUser||!cloudMode)return;diary.tasks[i].done=check.checked;saveDiary();renderTasks();});const label=document.createElement('span');label.textContent=task.text;row.append(check,label);if(!readOnlyMode&&authUser&&cloudMode){const del=document.createElement('button');del.type='button';del.textContent='×';del.setAttribute('aria-label','할 일 삭제');del.addEventListener('click',()=>{if(readOnlyMode||!authUser||!cloudMode)return;diary.tasks.splice(i,1);saveDiary();renderTasks();});row.append(del);}list.append(row);});renderStats();}
+function renderStats(){const tasks=diary.tasks||[];const done=tasks.filter(t=>t.done).length;const pct=tasks.length?Math.round(done/tasks.length*100):0;$('planCount').textContent=tasks.length+'개';$('doneCount').textContent=done+'개';$('daysCount').textContent=Object.values(records).filter(d=>d&&(d.title||d.tasks?.length||d.doText||d.seeText||d.gratitude||d.planNote)).length+'일';$('progressPercent').textContent=pct+'%';$('progressFill').style.width=pct+'%';$('progressCaption').textContent=tasks.length?(done===tasks.length?'오늘 계획한 일을 모두 해냈어요. 정말 잘했어요!':`${tasks.length-done}개의 할 일이 남아 있어요. 내 속도로 해봐요.`):'할 일을 추가하고 하나씩 완료해 보세요.';}
+function renderHistory(){const list=$('historyList');list.innerHTML='';const keys=Object.keys(records).filter(k=>{const d=records[k];return d&&(d.title||d.tasks?.length||d.doText||d.seeText||d.gratitude||d.planNote)}).sort((a,b)=>b.localeCompare(a));if(!keys.length){list.innerHTML='<div class="empty">아직 저장된 기록이 없어요.<br>오늘의 첫 페이지를 채워보세요 ✨</div>';return;}keys.slice(0,8).forEach(key=>{const d=records[key];const date=new Date(key+'T12:00:00');const wrap=document.createElement('div');wrap.style.display='flex';wrap.style.gap='6px';const btn=document.createElement('button');btn.className='history-item';btn.style.flex='1';const stamp=document.createElement('div');stamp.className='history-date';stamp.innerHTML=`<strong>${date.getDate()}</strong><span>${date.toLocaleDateString('ko-KR',{month:'short'})}</span>`;const copy=document.createElement('div');copy.className='history-copy';const title=document.createElement('strong');title.textContent=d.title||d.doText?.trim().slice(0,24)||d.seeText?.trim().slice(0,24)||'나의 하루 기록';const small=document.createElement('small');small.textContent=(d.tasks?.filter(t=>t.done).length||0)+'개 할 일 완료 · '+(d.doMood||'기록');copy.append(title,small);btn.append(stamp,copy);btn.addEventListener('click',()=>{currentRecordKey=key;diary=JSON.parse(JSON.stringify(d));fillForm();renderTasks();switchTab('plan');$('saveStatus').textContent=key===todayKey?'오늘의 기록을 보고 있어요.':`${key} 기록을 보고 있어요. 저장하면 선택한 날짜의 기록이 업데이트됩니다.`;});wrap.append(btn);if(!readOnlyMode&&authUser&&cloudMode){const del=document.createElement('button');del.type='button';del.className='btn ghost small';del.textContent='삭제';del.setAttribute('aria-label',key+' 기록 삭제');del.addEventListener('click',()=>deleteRecord(key));wrap.append(del);}list.append(wrap);});}
+
+function setReadOnly(on){const locked=!!on||!authUser||!cloudMode;readOnlyMode=locked;['planTitle','taskInput','priority','planNote','doText','doMood','seeText','gratitude','tomorrow','addTaskBtn','saveBtn'].forEach(id=>{if($(id))$(id).disabled=locked;});document.querySelectorAll('.task input,.task button').forEach(el=>el.disabled=locked);document.querySelectorAll('.history-list .btn').forEach(el=>el.classList.toggle('hidden',locked));$('saveBtn').classList.toggle('hidden',locked);$('addTaskBtn').classList.toggle('hidden',locked);$('saveStatus').textContent=locked?'둘러보기 모드 · 공개된 기록을 읽을 수 있습니다.':'로그인 상태 · 기록을 작성하고 저장할 수 있습니다.';renderTasks();renderHistory();}
+async function loadPublicRecords(){if(!supabaseClient)return;const {data,error}=await supabaseClient.from('diaries').select('diary_date,title,tasks,priority,plan_note,do_text,do_mood,see_text,gratitude,tomorrow').eq('user_id',OWNER_UID).order('diary_date',{ascending:false});if(error){$('saveStatus').textContent='공개 기록을 불러오지 못했습니다: '+error.message;return;}records={};for(const row of data||[])records[row.diary_date]=rowToDiary(row);currentRecordKey=todayKey;diary=records[todayKey]?JSON.parse(JSON.stringify(records[todayKey])):(Object.keys(records).length?JSON.parse(JSON.stringify(records[Object.keys(records).sort().reverse()[0]])):blankDiary());fillForm();renderTasks();renderStats();renderHistory();setReadOnly(true);}
+
+function switchTab(tab){activeTab=tab;document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));['plan','do','see'].forEach(t=>$(t+'Panel').classList.toggle('hidden',t!==tab));}
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
+$('addTaskBtn').addEventListener('click',()=>{if(readOnlyMode||!authUser||!cloudMode)return;const value=$('taskInput').value.trim();if(!value)return;diary.tasks.push({text:value,done:false});$('taskInput').value='';saveDiary();renderTasks();});
+$('taskInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('addTaskBtn').click();}});
+$('saveBtn').addEventListener('click',saveDiary);
+
+['planTitle','priority','planNote','doText','doMood','seeText','gratitude','tomorrow'].forEach(id=>$(id).addEventListener('change',()=>{captureForm();}));
+$('demoBtn').addEventListener('click',()=>{$('authModal').classList.add('hidden');$('authPassword').value='';$('loginBtn').classList.add('hidden');$('logoutBtn').classList.remove('hidden');$('userLabel').textContent='둘러보기 모드';$('greeting').textContent='가볍게 둘러보는';cloudMode=false;authUser=null;currentRecordKey=todayKey;diary=records[todayKey]?JSON.parse(JSON.stringify(records[todayKey])):blankDiary();fillForm();renderTasks();renderStats();renderHistory();setReadOnly(true);loadPublicRecords();});
+$('loginBtn').addEventListener('click',()=>{$('authModal').classList.remove('hidden');});
+$('logoutBtn').addEventListener('click',async()=>{try{if(cloudMode&&supabaseClient)await supabaseClient.auth.signOut();}catch(err){console.error('로그아웃 오류:',err);}finally{authUser=null;cloudMode=false;currentRecordKey=todayKey;$('authModal').classList.add('hidden');$('loginBtn').classList.remove('hidden');$('logoutBtn').classList.add('hidden');$('userLabel').textContent='둘러보기 모드';$('greeting').textContent='오늘의 나를 위한';$('authPassword').value='';setReadOnly(true);await loadPublicRecords();renderTasks();renderHistory();}});
+document.querySelectorAll('[data-auth]').forEach(b=>b.addEventListener('click',()=>{const signup=b.dataset.auth==='signup';document.querySelectorAll('[data-auth]').forEach(x=>x.classList.toggle('active',x===b));$('authTitle').textContent=signup?'새 계정을 만들어요.':'나만의 하루를 시작해요.';$('authDesc').textContent=signup?'사용할 아이디와 비밀번호를 정해 주세요.':'가입할 때 만든 이메일과 비밀번호를 입력해 주세요.';$('authSubmit').textContent=signup?'회원가입':'로그인';$('authPassword').autocomplete=signup?'new-password':'current-password';}));
+$('authForm').addEventListener('submit',async e=>{e.preventDefault();if(!supabaseClient){alert('Supabase 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하고 배포된 웹사이트에서 다시 시도해 주세요.');return;}const email=$('authUsername').value.trim().toLowerCase();const password=$('authPassword').value;const signup=document.querySelector('[data-auth="signup"]').classList.contains('active');$('authSubmit').disabled=true;$('authSubmit').textContent='처리 중…';try{const result=signup?await supabaseClient.auth.signUp({email,password}):await supabaseClient.auth.signInWithPassword({email,password});if(result.error)throw result.error;if(signup&&!result.data.session){alert('회원가입 요청은 접수됐지만 로그인 세션이 만들어지지 않았습니다. Supabase에서 이메일 확인(Confirm email)을 꺼야 아이디 방식으로 바로 이용할 수 있습니다.');return;}authUser=result.data.user;cloudMode=!!authUser;setReadOnly(false);if(!authUser)throw new Error('인증된 사용자 정보를 확인할 수 없습니다.');$('authModal').classList.add('hidden');$('authPassword').value='';$('loginBtn').classList.add('hidden');$('logoutBtn').classList.remove('hidden');$('userLabel').textContent=email;$('greeting').textContent='다시 만나 반가워요';await loadCloudRecords();}catch(err){alert('로그인/회원가입에 실패했습니다. '+(err.message||'아이디 또는 비밀번호를 확인해 주세요.'));}finally{$('authSubmit').disabled=false;$('authSubmit').textContent=document.querySelector('[data-auth="signup"]').classList.contains('active')?'회원가입':'로그인';}});
+async function restoreSession(){if(!supabaseClient)return;const {data,error}=await supabaseClient.auth.getSession();if(error){console.error(error);return;}if(data.session?.user){authUser=data.session.user;cloudMode=true;setReadOnly(false);$('authModal').classList.add('hidden');$('loginBtn').classList.add('hidden');$('logoutBtn').classList.remove('hidden');$('userLabel').textContent=authUser.email||'로그인됨';$('greeting').textContent='다시 만나 반가워요';await loadCloudRecords();}}
+if(supabaseClient){supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'){authUser=null;cloudMode=false;}});}
+fillForm();renderTasks();renderStats();renderHistory();setReadOnly(true);$('userLabel').textContent='둘러보기 모드';loadPublicRecords();restoreSession();
+</script>
+</body>
+</html>
