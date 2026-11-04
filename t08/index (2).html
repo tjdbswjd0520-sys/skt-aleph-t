@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+
+    <!-- 모바일 화면에 맞게 크기 조절 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>나를 소개합니다</title>
+
+    <style>
+
+        /* =========================================
+           기본 설정
+        ========================================= */
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+            margin: 0;
+
+            min-height: 100vh;
+
+            /* 첫 번째 버전과 동일하게 화면 가운데 정렬 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            /* 기본 배경 */
+            background-color: #f3efe7;
+
+            font-family: Arial, "Noto Sans KR", sans-serif;
+
+            /* 배경 그라데이션 전환 */
+            transition: background 0.8s ease;
+
+            overflow: hidden;
+        }
+
+
+        /* =========================================
+           자기소개 전체 영역
+           첫 번째 버전의 위치 유지
+        ========================================= */
+
+        .container {
+            width: 90%;
+            max-width: 900px;
+
+            text-align: center;
+
+            padding: 40px 20px;
+
+            position: relative;
+
+            z-index: 20;
+        }
+
+
+        /* =========================================
+           안녕하세요
+        ========================================= */
+
+        h1 {
+            margin: 0 0 50px;
+
+            font-size: clamp(40px, 8vw, 80px);
+
+            font-weight: 700;
+
+            color: #222;
+        }
+
+
+        /* =========================================
+           버튼 영역
+        ========================================= */
+
+        .buttons {
+            display: flex;
+
+            justify-content: center;
+
+            flex-wrap: wrap;
+
+            gap: 15px;
+        }
+
+
+        /* 버튼 */
+        .intro-button {
+            padding: 15px 22px;
+
+            border: 1px solid #333;
+
+            border-radius: 30px;
+
+            background-color: rgba(243, 239, 231, 0.6);
+
+            color: #333;
+
+            font-size: 16px;
+
+            cursor: pointer;
+
+            transition: all 0.25s ease;
+
+            position: relative;
+
+            z-index: 30;
+        }
+
+
+        /* 마우스를 올렸을 때 */
+        .intro-button:hover {
+            background-color: #333;
+
+            color: white;
+
+            transform: translateY(-3px);
+        }
+
+
+        /* 클릭했을 때 */
+        .intro-button:active {
+            transform: scale(0.95);
+        }
+
+
+        /* =========================================
+           화면에 등장하는 단어
+        ========================================= */
+
+        .word {
+            position: fixed;
+
+            z-index: 10;
+
+            max-width: 70vw;
+
+            text-align: center;
+
+            font-size: clamp(20px, 4vw, 45px);
+
+            font-weight: bold;
+
+            color: #222;
+
+            pointer-events: none;
+
+            animation:
+                appearAndDisappear 2.5s ease-in-out forwards;
+        }
+
+
+        /* =========================================
+           단어 애니메이션
+        ========================================= */
+
+        @keyframes appearAndDisappear {
+
+            0% {
+                opacity: 0;
+
+                transform:
+                    translate(-50%, -50%)
+                    scale(0.5);
+            }
+
+            20% {
+                opacity: 1;
+
+                transform:
+                    translate(-50%, -50%)
+                    scale(1);
+            }
+
+            70% {
+                opacity: 1;
+
+                transform:
+                    translate(-50%, -50%)
+                    scale(1.05);
+            }
+
+            100% {
+                opacity: 0;
+
+                transform:
+                    translate(-50%, -50%)
+                    scale(1.3);
+            }
+        }
+
+
+        /* =========================================
+           버튼 편집 메뉴 (오른쪽 아래 고정)
+        ========================================= */
+
+        .edit-menu-button {
+            position: fixed;
+
+            right: 16px;
+            bottom: 16px;
+
+            z-index: 40;
+
+            padding: 10px 16px;
+
+            border: 1px solid #333;
+
+            border-radius: 20px;
+
+            background-color: rgba(243, 239, 231, 0.7);
+
+            color: #333;
+
+            font-size: 14px;
+
+            cursor: pointer;
+
+            transition: all 0.25s ease;
+        }
+
+        .edit-menu-button:hover {
+            background-color: #333;
+
+            color: white;
+        }
+
+
+        /* =========================================
+           모달 공통 (비밀번호 / 편집 창)
+        ========================================= */
+
+        .modal-overlay {
+            position: fixed;
+
+            inset: 0;
+
+            z-index: 100;
+
+            display: none;
+
+            justify-content: center;
+
+            align-items: center;
+
+            padding: 16px;
+
+            background-color: rgba(0, 0, 0, 0.45);
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal {
+            width: 100%;
+
+            background-color: #f3efe7;
+
+            color: #222;
+
+            border-radius: 18px;
+
+            padding: 24px;
+
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal h2 {
+            margin: 0 0 16px;
+
+            font-size: 20px;
+        }
+
+        .modal input[type="text"],
+        .modal input[type="password"],
+        .modal textarea {
+            width: 100%;
+
+            padding: 10px 12px;
+
+            border: 1px solid #333;
+
+            border-radius: 10px;
+
+            background-color: #fff;
+
+            color: #222;
+
+            /* 모바일에서 확대되지 않도록 16px */
+            font-size: 16px;
+
+            font-family: inherit;
+        }
+
+        .modal textarea {
+            resize: vertical;
+
+            min-height: 90px;
+        }
+
+        .modal-actions {
+            display: flex;
+
+            justify-content: flex-end;
+
+            flex-wrap: wrap;
+
+            gap: 10px;
+
+            margin-top: 16px;
+        }
+
+        .modal-button {
+            padding: 10px 18px;
+
+            border: 1px solid #333;
+
+            border-radius: 20px;
+
+            background-color: transparent;
+
+            color: #333;
+
+            font-size: 15px;
+
+            cursor: pointer;
+
+            transition: all 0.2s ease;
+        }
+
+        .modal-button:hover {
+            background-color: #333;
+
+            color: white;
+        }
+
+        .modal-button.primary {
+            background-color: #333;
+
+            color: white;
+        }
+
+        .modal-button.primary:hover {
+            background-color: #000;
+        }
+
+        .modal-button.danger {
+            border-color: #b3261e;
+
+            color: #b3261e;
+        }
+
+        .modal-button.danger:hover {
+            background-color: #b3261e;
+
+            color: white;
+        }
+
+        /* 사용할 수 없는 버튼 */
+        .modal-button:disabled,
+        .modal-button:disabled:hover {
+            opacity: 0.4;
+
+            cursor: not-allowed;
+
+            background-color: transparent;
+
+            color: #333;
+        }
+
+        .modal-button.danger:disabled,
+        .modal-button.danger:disabled:hover {
+            color: #b3261e;
+        }
+
+        .error-message {
+            min-height: 20px;
+
+            margin: 8px 0 0;
+
+            color: #b3261e;
+
+            font-size: 14px;
+        }
+
+
+        /* 비밀번호 창 */
+        .password-modal {
+            max-width: 360px;
+        }
+
+        .shake {
+            animation: shake 0.35s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+
+        /* 편집 창 */
+        .edit-modal {
+            max-width: 560px;
+
+            max-height: 90vh;
+
+            display: flex;
+
+            flex-direction: column;
+        }
+
+        .edit-list {
+            overflow-y: auto;
+
+            flex: 1;
+
+            padding-right: 4px;
+        }
+
+        .edit-item {
+            margin-bottom: 14px;
+
+            padding: 14px;
+
+            border: 1px solid rgba(0, 0, 0, 0.25);
+
+            border-radius: 14px;
+
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .edit-item label {
+            display: block;
+
+            margin: 0 0 6px;
+
+            font-size: 13px;
+
+            font-weight: bold;
+        }
+
+        .edit-item label:not(:first-child) {
+            margin-top: 10px;
+        }
+
+        .edit-item-head {
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            margin-bottom: 10px;
+
+            font-size: 14px;
+
+            font-weight: bold;
+        }
+
+        .edit-empty {
+            padding: 20px 0;
+
+            text-align: center;
+
+            color: #666;
+
+            font-size: 14px;
+        }
+
+
+        /* =========================================
+           모바일
+        ========================================= */
+
+        @media (max-width: 600px) {
+
+            .container {
+                padding: 30px 15px;
+            }
+
+
+            h1 {
+                margin-bottom: 40px;
+            }
+
+
+            .buttons {
+                flex-direction: column;
+
+                align-items: center;
+            }
+
+
+            .intro-button {
+                width: 100%;
+
+                max-width: 320px;
+
+                padding: 14px 15px;
+
+                font-size: 15px;
+            }
+
+
+            .word {
+                max-width: 75vw;
+
+                font-size: clamp(18px, 6vw, 32px);
+            }
+
+
+            .modal {
+                padding: 18px;
+            }
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+
+    <!-- =========================================
+         자기소개 메인 영역
+    ========================================= -->
+
+    <main class="container">
+
+        <h1>안녕하세요</h1>
+
+        <!-- 버튼은 자바스크립트가 데이터를 읽어서 만들어 줍니다 -->
+        <div class="buttons" id="buttons"></div>
+
+    </main>
+
+
+    <!-- 버튼 편집 메뉴 -->
+    <button class="edit-menu-button" id="editMenuButton">
+        ⚙ 버튼 편집
+    </button>
+
+
+    <!-- =========================================
+         비밀번호 입력 화면
+    ========================================= -->
+
+    <div class="modal-overlay" id="passwordOverlay">
+        <div class="modal password-modal" id="passwordModal">
+
+            <h2>비밀번호 입력</h2>
+
+            <input
+                type="password"
+                id="passwordInput"
+                placeholder="비밀번호를 입력하세요"
+                autocomplete="off">
+
+            <p class="error-message" id="passwordError"></p>
+
+            <div class="modal-actions">
+                <button class="modal-button" id="passwordCancel">취소</button>
+                <button class="modal-button primary" id="passwordSubmit">확인</button>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- =========================================
+         버튼 편집 창
+    ========================================= -->
+
+    <div class="modal-overlay" id="editOverlay">
+        <div class="modal edit-modal">
+
+            <h2>버튼 편집</h2>
+
+            <div class="edit-list" id="editList"></div>
+
+            <p class="error-message" id="editError"></p>
+
+            <div class="modal-actions">
+                <button class="modal-button danger" id="editReset">기본값으로 되돌리기</button>
+                <button class="modal-button" id="editAdd">+ 버튼 추가</button>
+                <button class="modal-button" id="editCancel">취소</button>
+                <button class="modal-button primary" id="editSave">저장</button>
+            </div>
+
+        </div>
+    </div>
+
+
+
+    <script>
+
+        /* =========================================
+           설정
+        ========================================= */
+
+        /*
+            버튼 편집 비밀번호
+            원하는 비밀번호로 바꿔서 사용하세요.
+
+            ※ 이 파일을 열 수 있는 사람은 코드도 볼 수 있어서
+              보안용이 아니라 '실수 방지용' 잠금입니다.
+        */
+        const EDIT_PASSWORD = "1234";
+
+
+        // 편집한 내용을 저장할 이름 (브라우저에 저장됨)
+        const STORAGE_KEY = "introButtons";
+
+
+        // 버튼 개수 제한 (최소 1개, 최대 3개)
+        const MIN_BUTTONS = 1;
+
+        const MAX_BUTTONS = 3;
+
+
+        /* =========================================
+           자기소개 내용 (기본값)
+        ========================================= */
+
+        const defaultButtons = [
+
+            {
+                label: "저는 어떤 사람이냐면요",
+
+                // 성격
+                words: [
+                    "내성적",
+                    "호기심",
+                    "조용함",
+                    "충동적"
+                ]
+            },
+
+            {
+                label: "제가 좋아하는 건요",
+
+                // 좋아하는 것
+                words: [
+                    "도넛",
+                    "아이스크림",
+                    "종이",
+                    "산책",
+                    "인체그리기"
+                ]
+            },
+
+            {
+                label: "저는 이런 일이 있었어요",
+
+                // 경험
+                words: [
+                    "고등학교 정보 과목 1등급",
+                    "대학교 C프로그래밍 & 자료구조 과목 A+",
+                    "9모에서 지구과학 8등급"
+                ]
+            }
+
+        ];
+
+
+        /* 현재 사용 중인 버튼 목록 */
+        let buttonsData = loadButtons();
+
+
+
+        /* =========================================
+           저장 / 불러오기
+        ========================================= */
+
+        function cloneData(data) {
+
+            return JSON.parse(JSON.stringify(data));
+
+        }
+
+
+        function loadButtons() {
+
+            try {
+
+                const saved =
+                    localStorage.getItem(STORAGE_KEY);
+
+                if (saved) {
+
+                    const parsed = JSON.parse(saved);
+
+                    if (
+                        Array.isArray(parsed) &&
+                        parsed.length >= MIN_BUTTONS
+                    ) {
+
+                        /* 저장된 값이 3개를 넘으면 3개까지만 사용 */
+                        return parsed.slice(0, MAX_BUTTONS);
+
+                    }
+
+                }
+
+            } catch (error) {
+
+                /* 저장소를 쓸 수 없으면 기본값 사용 */
+
+            }
+
+            return cloneData(defaultButtons);
+
+        }
+
+
+        function saveButtons() {
+
+            try {
+
+                localStorage.setItem(
+                    STORAGE_KEY,
+                    JSON.stringify(buttonsData)
+                );
+
+            } catch (error) {
+
+                /* 저장 실패 시에도 이번 접속 동안은 적용됨 */
+
+            }
+
+        }
+
+
+
+        /* =========================================
+           버튼 화면에 그리기
+        ========================================= */
+
+        function renderButtons() {
+
+            const container =
+                document.getElementById("buttons");
+
+            container.innerHTML = "";
+
+            buttonsData.forEach(function(item) {
+
+                const button =
+                    document.createElement("button");
+
+                button.className = "intro-button";
+
+                button.textContent = item.label;
+
+                button.addEventListener("click", function() {
+
+                    showWords(item.words);
+
+                });
+
+                container.appendChild(button);
+
+            });
+
+        }
+
+
+
+        /* =========================================
+           랜덤 그라데이션 색상
+        ========================================= */
+
+        const gradientColors = [
+            "#ffecd2",
+            "#fcb69f",
+            "#a1c4fd",
+            "#c2e9fb",
+            "#d4fc79",
+            "#96e6a1",
+            "#fbc2eb",
+            "#a6c1ee",
+            "#84fab0",
+            "#8fd3f4",
+            "#fccb90",
+            "#d57eeb"
+        ];
+
+
+        /* 랜덤 색상 선택 */
+        function getRandomColor() {
+
+            const randomIndex =
+                Math.floor(
+                    Math.random() *
+                    gradientColors.length
+                );
+
+            return gradientColors[randomIndex];
+        }
+
+
+        /* =========================================
+           랜덤 그라데이션 적용
+        ========================================= */
+
+        function changeBackground() {
+
+            let color1 = getRandomColor();
+
+            let color2 = getRandomColor();
+
+
+            /* 같은 색이면 다시 선택 */
+            while (color1 === color2) {
+
+                color2 = getRandomColor();
+
+            }
+
+
+            document.body.style.background =
+                `linear-gradient(
+                    135deg,
+                    ${color1},
+                    ${color2}
+                )`;
+        }
+
+
+        /* =========================================
+           원래 배경으로 복귀
+        ========================================= */
+
+        function resetBackground() {
+
+            document.body.style.background =
+                "#f3efe7";
+        }
+
+
+
+        /* =========================================
+           단어가 기존 요소와 겹치는지 확인
+        ========================================= */
+
+        function isOverlapping(rect1, rect2, gap) {
+
+            return (
+                rect1.left <
+                    rect2.right + gap &&
+
+                rect1.right >
+                    rect2.left - gap &&
+
+                rect1.top <
+                    rect2.bottom + gap &&
+
+                rect1.bottom >
+                    rect2.top - gap
+            );
+        }
+
+
+
+        /* =========================================
+           단어 표시
+        ========================================= */
+
+        function showWords(words) {
+
+            /* 배경 변경 */
+            changeBackground();
+
+
+            /* 기존 단어 삭제 */
+            document
+                .querySelectorAll(".word")
+                .forEach(function(word) {
+
+                    word.remove();
+
+                });
+
+
+            /* 안녕하세요와 버튼의 실제 좌표 확인 */
+            const title =
+                document.querySelector("h1");
+
+            const buttons =
+                document.querySelector(".buttons");
+
+            const titleRect =
+                title.getBoundingClientRect();
+
+            const buttonRect =
+                buttons.getBoundingClientRect();
+
+
+            /* 제목과 버튼 주변 안전거리 */
+            const safeGap = 30;
+
+
+            /*
+                단어가 들어가면 안 되는
+                '안녕하세요 + 버튼' 영역
+            */
+            const forbiddenArea = {
+
+                left:
+                    titleRect.left - safeGap,
+
+                right:
+                    titleRect.right + safeGap,
+
+                top:
+                    titleRect.top - safeGap,
+
+                bottom:
+                    buttonRect.bottom + safeGap
+
+            };
+
+
+            /* 이미 배치한 단어 위치 저장 */
+            const placedWords = [];
+
+
+            /* 단어 생성 */
+            words.forEach(function(word, index) {
+
+                const wordElement =
+                    document.createElement("span");
+
+                wordElement.textContent =
+                    word;
+
+                wordElement.classList.add("word");
+
+
+                /* 실제 크기를 측정하기 위해 먼저 추가 */
+                document.body.appendChild(
+                    wordElement
+                );
+
+                const wordWidth =
+                    wordElement.offsetWidth;
+
+                const wordHeight =
+                    wordElement.offsetHeight;
+
+
+                let positionFound = false;
+
+                let finalX = 0;
+
+                let finalY = 0;
+
+
+                /* 적절한 위치를 최대 200번 탐색 */
+                for (
+                    let attempt = 0;
+                    attempt < 200;
+                    attempt++
+                ) {
+
+                    const minX =
+                        wordWidth / 2 + 20;
+
+                    const maxX =
+                        window.innerWidth -
+                        wordWidth / 2 -
+                        20;
+
+                    const minY =
+                        wordHeight / 2 + 20;
+
+                    const maxY =
+                        window.innerHeight -
+                        wordHeight / 2 -
+                        20;
+
+
+                    /* 랜덤 좌표 생성 */
+                    const randomX =
+                        Math.random() *
+                        (maxX - minX) +
+                        minX;
+
+                    const randomY =
+                        Math.random() *
+                        (maxY - minY) +
+                        minY;
+
+
+                    /* 새 단어가 차지할 공간 */
+                    const newRect = {
+
+                        left:
+                            randomX -
+                            wordWidth / 2,
+
+                        right:
+                            randomX +
+                            wordWidth / 2,
+
+                        top:
+                            randomY -
+                            wordHeight / 2,
+
+                        bottom:
+                            randomY +
+                            wordHeight / 2
+                    };
+
+
+                    /* 제목/버튼 영역과 겹치는지 확인 */
+                    if (
+                        isOverlapping(
+                            newRect,
+                            forbiddenArea,
+                            0
+                        )
+                    ) {
+
+                        continue;
+                    }
+
+
+                    /* 다른 단어와 겹치는지 확인 */
+                    let wordOverlap = false;
+
+                    for (
+                        const oldRect
+                        of placedWords
+                    ) {
+
+                        if (
+                            isOverlapping(
+                                newRect,
+                                oldRect,
+                                30
+                            )
+                        ) {
+
+                            wordOverlap = true;
+
+                            break;
+                        }
+                    }
+
+
+                    if (!wordOverlap) {
+
+                        finalX = randomX;
+
+                        finalY = randomY;
+
+                        placedWords.push(newRect);
+
+                        positionFound = true;
+
+                        break;
+                    }
+
+                }
+
+
+                /* 위치를 찾지 못하면 표시하지 않음 */
+                if (!positionFound) {
+
+                    wordElement.remove();
+
+                    return;
+                }
+
+
+                /* 최종 위치 적용 */
+                wordElement.style.left =
+                    finalX + "px";
+
+                wordElement.style.top =
+                    finalY + "px";
+
+
+                /* 단어마다 조금씩 늦게 등장 */
+                wordElement.style.animationDelay =
+                    (index * 0.15) + "s";
+
+
+                /* 애니메이션이 끝나면 삭제 */
+                setTimeout(function() {
+
+                    wordElement.remove();
+
+                }, 3000 + (index * 150));
+
+            });
+
+
+            /* 모든 단어가 사라지면 원래 배경으로 */
+            const totalTime =
+                3000 +
+                ((words.length - 1) * 150);
+
+            setTimeout(function() {
+
+                resetBackground();
+
+            }, totalTime + 200);
+
+        }
+
+
+
+        /* =========================================
+           비밀번호 화면
+        ========================================= */
+
+        const passwordOverlay =
+            document.getElementById("passwordOverlay");
+
+        const passwordModal =
+            document.getElementById("passwordModal");
+
+        const passwordInput =
+            document.getElementById("passwordInput");
+
+        const passwordError =
+            document.getElementById("passwordError");
+
+
+        function openPasswordModal() {
+
+            passwordInput.value = "";
+
+            passwordError.textContent = "";
+
+            passwordOverlay.classList.add("open");
+
+            passwordInput.focus();
+
+        }
+
+
+        function closePasswordModal() {
+
+            passwordOverlay.classList.remove("open");
+
+        }
+
+
+        function submitPassword() {
+
+            if (passwordInput.value === EDIT_PASSWORD) {
+
+                /* 맞으면 비밀번호 창을 닫고 편집 창을 엽니다 */
+                closePasswordModal();
+
+                openEditModal();
+
+                return;
+            }
+
+
+            /* 틀리면 흔들리는 효과와 안내 문구 */
+            passwordError.textContent =
+                "비밀번호가 맞지 않습니다.";
+
+            passwordInput.value = "";
+
+            passwordModal.classList.remove("shake");
+
+            /* 애니메이션을 다시 실행하기 위한 처리 */
+            void passwordModal.offsetWidth;
+
+            passwordModal.classList.add("shake");
+
+            passwordInput.focus();
+
+        }
+
+
+        document
+            .getElementById("editMenuButton")
+            .addEventListener("click", openPasswordModal);
+
+        document
+            .getElementById("passwordSubmit")
+            .addEventListener("click", submitPassword);
+
+        document
+            .getElementById("passwordCancel")
+            .addEventListener("click", closePasswordModal);
+
+        passwordInput.addEventListener("keydown", function(event) {
+
+            if (event.key === "Enter") {
+
+                submitPassword();
+
+            }
+
+        });
+
+
+
+        /* =========================================
+           버튼 편집 창
+        ========================================= */
+
+        const editOverlay =
+            document.getElementById("editOverlay");
+
+        const editList =
+            document.getElementById("editList");
+
+        const editError =
+            document.getElementById("editError");
+
+
+        /* 편집 중인 임시 데이터 (저장을 눌러야 적용됨) */
+        let draft = [];
+
+
+        function openEditModal() {
+
+            /*
+                words를 줄바꿈으로 구분한 글자(text)로 바꿔서
+                편집용 임시 데이터를 만듭니다.
+            */
+            draft = buttonsData.map(function(item) {
+
+                return {
+
+                    label: item.label,
+
+                    text: item.words.join("\n")
+
+                };
+
+            });
+
+            editError.textContent = "";
+
+            renderEditList();
+
+            editOverlay.classList.add("open");
+
+        }
+
+
+        function closeEditModal() {
+
+            editOverlay.classList.remove("open");
+
+        }
+
+
+        function renderEditList() {
+
+            editList.innerHTML = "";
+
+
+            /* 개수 제한에 따라 추가 버튼 상태 변경 */
+            const addButton =
+                document.getElementById("editAdd");
+
+            addButton.disabled =
+                draft.length >= MAX_BUTTONS;
+
+            addButton.textContent =
+                "+ 버튼 추가 (" + draft.length +
+                "/" + MAX_BUTTONS + ")";
+
+
+            if (draft.length === 0) {
+
+                const empty =
+                    document.createElement("div");
+
+                empty.className = "edit-empty";
+
+                empty.textContent =
+                    "버튼이 없습니다. '+ 버튼 추가'를 눌러주세요.";
+
+                editList.appendChild(empty);
+
+                return;
+            }
+
+
+            draft.forEach(function(item, index) {
+
+                const box =
+                    document.createElement("div");
+
+                box.className = "edit-item";
+
+
+                /* 위쪽: 번호 + 삭제 버튼 */
+                const head =
+                    document.createElement("div");
+
+                head.className = "edit-item-head";
+
+                const headTitle =
+                    document.createElement("span");
+
+                headTitle.textContent =
+                    "버튼 " + (index + 1);
+
+                const deleteButton =
+                    document.createElement("button");
+
+                deleteButton.type = "button";
+
+                deleteButton.className =
+                    "modal-button danger";
+
+                deleteButton.textContent = "삭제";
+
+                /* 버튼이 1개만 남으면 삭제할 수 없음 */
+                deleteButton.disabled =
+                    draft.length <= MIN_BUTTONS;
+
+                deleteButton.addEventListener("click", function() {
+
+                    if (draft.length <= MIN_BUTTONS) {
+
+                        return;
+                    }
+
+                    draft.splice(index, 1);
+
+                    renderEditList();
+
+                });
+
+                head.appendChild(headTitle);
+
+                head.appendChild(deleteButton);
+
+
+                /* 버튼 이름 */
+                const labelTitle =
+                    document.createElement("label");
+
+                labelTitle.textContent = "버튼 이름";
+
+                const labelInput =
+                    document.createElement("input");
+
+                labelInput.type = "text";
+
+                labelInput.value = item.label;
+
+                labelInput.addEventListener("input", function() {
+
+                    item.label = labelInput.value;
+
+                });
+
+
+                /* 나타날 단어들 */
+                const wordsTitle =
+                    document.createElement("label");
+
+                wordsTitle.textContent =
+                    "나타날 단어 (한 줄에 하나씩)";
+
+                const wordsInput =
+                    document.createElement("textarea");
+
+                wordsInput.value = item.text;
+
+                wordsInput.addEventListener("input", function() {
+
+                    item.text = wordsInput.value;
+
+                });
+
+
+                box.appendChild(head);
+
+                box.appendChild(labelTitle);
+
+                box.appendChild(labelInput);
+
+                box.appendChild(wordsTitle);
+
+                box.appendChild(wordsInput);
+
+                editList.appendChild(box);
+
+            });
+
+        }
+
+
+        /* 버튼 추가 */
+        document
+            .getElementById("editAdd")
+            .addEventListener("click", function() {
+
+                if (draft.length >= MAX_BUTTONS) {
+
+                    return;
+                }
+
+                draft.push({
+
+                    label: "",
+
+                    text: ""
+
+                });
+
+                renderEditList();
+
+                /* 새로 추가된 칸으로 스크롤 */
+                editList.scrollTop =
+                    editList.scrollHeight;
+
+                const inputs =
+                    editList.querySelectorAll("input[type='text']");
+
+                if (inputs.length > 0) {
+
+                    inputs[inputs.length - 1].focus();
+
+                }
+
+            });
+
+
+        /* 기본값으로 되돌리기 */
+        document
+            .getElementById("editReset")
+            .addEventListener("click", function() {
+
+                if (!confirm("버튼을 처음 상태로 되돌릴까요?")) {
+
+                    return;
+                }
+
+                draft = defaultButtons.map(function(item) {
+
+                    return {
+
+                        label: item.label,
+
+                        text: item.words.join("\n")
+
+                    };
+
+                });
+
+                editError.textContent = "";
+
+                renderEditList();
+
+            });
+
+
+        /* 취소 */
+        document
+            .getElementById("editCancel")
+            .addEventListener("click", closeEditModal);
+
+
+        /* 저장 */
+        document
+            .getElementById("editSave")
+            .addEventListener("click", function() {
+
+                const result = [];
+
+
+                /* 개수 제한 확인 */
+                if (
+                    draft.length < MIN_BUTTONS ||
+                    draft.length > MAX_BUTTONS
+                ) {
+
+                    editError.textContent =
+                        "버튼은 최소 " + MIN_BUTTONS +
+                        "개, 최대 " + MAX_BUTTONS +
+                        "개까지 가능합니다.";
+
+                    return;
+                }
+
+
+                for (let i = 0; i < draft.length; i++) {
+
+                    const label = draft[i].label.trim();
+
+                    const words =
+                        draft[i].text
+                            .split("\n")
+                            .map(function(line) {
+
+                                return line.trim();
+
+                            })
+                            .filter(function(line) {
+
+                                return line !== "";
+
+                            });
+
+
+                    if (label === "") {
+
+                        editError.textContent =
+                            "버튼 " + (i + 1) +
+                            "의 이름을 입력해주세요.";
+
+                        return;
+                    }
+
+
+                    if (words.length === 0) {
+
+                        editError.textContent =
+                            "버튼 " + (i + 1) +
+                            "에 나타날 단어를 한 개 이상 입력해주세요.";
+
+                        return;
+                    }
+
+
+                    result.push({
+
+                        label: label,
+
+                        words: words
+
+                    });
+
+                }
+
+
+                buttonsData = result;
+
+                saveButtons();
+
+                renderButtons();
+
+                closeEditModal();
+
+            });
+
+
+        /* ESC 키로 창 닫기 */
+        document.addEventListener("keydown", function(event) {
+
+            if (event.key === "Escape") {
+
+                closePasswordModal();
+
+                closeEditModal();
+
+            }
+
+        });
+
+
+
+        /* =========================================
+           시작
+        ========================================= */
+
+        renderButtons();
+
+    </script>
+
+</body>
+</html>
