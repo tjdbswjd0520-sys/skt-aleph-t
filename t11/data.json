@@ -3,7 +3,7 @@
   "tagline": "작은 실행을 쌓아, 신뢰할 수 있는 결과를 만드는 사람",
   "period": {
     "start": "2026-09-08",
-    "end": "2026-11-13"
+    "end": "2026-11-16"
   },
   "records": [
     {
@@ -181,15 +181,19 @@
     {
       "date": "2026-11-13",
       "status": "기록 없음"
+    },
+    {
+      "date": "2026-11-16",
+      "status": "기록 없음"
     }
   ],
   "metrics": {
-    "recordDays": 44,
+    "recordDays": 45,
     "evaluatedDays": 41,
     "full": 18,
     "partial": 8,
     "notDone": 15,
-    "missing": 3,
+    "missing": 4,
     "followRate": 63.4
   },
   "projects": [
@@ -209,8 +213,8 @@
       "url": ""
     }
   ],
-  "updatedAt": "2026-11-13",
-  "sourceNote": "현재 반영된 기록은 44개 날짜(2026-09-08~2026-11-13)입니다. 제공된 전체 13주 기록과 동일하다고 단정하지 않습니다.",
+  "updatedAt": "2026-11-16",
+  "sourceNote": "현재 반영된 기록은 45개 날짜(2026-09-08~2026-11-16)입니다. 제공된 전체 13주 기록과 동일하다고 단정하지 않습니다.",
   "paragraphCandidates": [
     {
       "title": "자기조절력",
