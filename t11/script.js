@@ -35,7 +35,16 @@ function render(data){
   $("followRate").textContent=`${m.followRate.toFixed(1)}%`;$("missingText").textContent=`평가 기록 누락 ${m.missing}일`;
   const total=Math.max(1,m.evaluatedDays);$("fullBar").style.width=`${m.full/total*100}%`;$("partialBar").style.width=`${m.partial/total*100}%`;$("notDoneBar").style.width=`${m.notDone/total*100}%`;
   $("sourceNote").textContent=`집계 기준: ${dates[0]||"시작일 미정"}~${dates[dates.length-1]||"종료일 미정"} 기록 ${m.recordDays}개 날짜. 실천·일부 실천 비율은 평가가 있는 ${m.evaluatedDays}일을 분모로 계산했습니다. 현재 제공된 기록이 13주 전체 기록을 의미하지는 않습니다.`;
-  renderCandidates(data.paragraphCandidates);renderProjects(data.projects||[]);
+  
+  renderCandidates(data.paragraphCandidates);
+  renderProjects(data.projects || []);
+
+  // 기본 기록 로딩 완료 표시
+  const status = $("dataSourceStatus");
+  if (status) {
+    status.textContent = "기본 기록을 불러왔습니다.";
+  }
 }
+
 async function load(){try{const r=await fetch(DATA_URL,{cache:"no-store"});if(!r.ok)throw Error("data.json을 불러오지 못했습니다.");render(await r.json());}catch(e){console.error(e);const s=$("dataSourceStatus");if(s)s.textContent="기록 데이터를 불러오지 못했습니다. 로컬 서버 또는 배포 상태를 확인해 주세요.";}}
 load();
