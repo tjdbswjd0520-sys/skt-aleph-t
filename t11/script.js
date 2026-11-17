@@ -19,10 +19,21 @@ function renderCandidates(items){
 }
 function renderProjects(projects){
   const grid=$("projectGrid");grid.innerHTML="";
-  const fallback=[{number:"10",title:"LLM 레드팀 방법론 비교 연구",description:"수동·자동·하이브리드 레드팀의 효과와 한계를 실증 연구 4편을 바탕으로 비교했습니다.",status:"연구 내용 정리",tag:"PAPER · AI SECURITY"},{number:"13",title:"앱 프로젝트",description:"13번 과제 완료 후 결과물과 구현 과정, 사용 기술을 추가합니다.",status:"자리 비워 둠"}];
+  const fallback=[{number:"10",title:"LLM 레드팀 방법론 비교 연구",description:"수동·자동·하이브리드 레드팀의 효과와 한계를 실증 연구 4편을 바탕으로 비교했습니다.",status:"연구 내용 정리",tag:"PAPER · AI SECURITY"},
+{
+  number:"13",
+  title:"Red Team Plan Helper",
+  description:"LLM 레드팀 연구 내용을 바탕으로 AI 서비스의 특성에 맞는 보안 평가 계획을 설계하는 웹 앱입니다.",
+  status:"웹 앱 · 직접 사용 가능",
+  url:"https://tjdbswjd0520-sys.github.io/skt-aleph-t/t_finalB/redteam_plan_helper/index.html",
+  tag:"APP · AI RED TEAMING"
+}
+];
   (projects.length?projects:fallback).forEach((p,i)=>{
     const article=document.createElement("article");article.className=`work-card ${i===0?"work-paper":"work-app"}`;
-    const visual=i===0?`<div class="work-visual visual-paper"><div class="paper-lines"></div><span>RESEARCH<br>IN PROGRESS</span></div>`:`<div class="work-visual visual-app"><div class="app-window"><i></i><i></i><i></i><b>APP<br>COMING<br>SOON</b></div></div>`;
+    const visual=i===0?`<div class="work-visual visual-paper"><div class="paper-lines"></div><span>RESEARCH<br>IN PROGRESS</span></div>`:`<div class="work-visual visual-app"><div class="app-window"><i></i><i></i><i></i>
+<b>RED TEAM<br>PLAN<br>HELPER</b>
+</div></div>`;
     article.innerHTML=`<div class="work-top"><span>PROJECT ${esc(p.number||"")}</span><span>0${i+1} / 0${projects.length}</span></div>${visual}<div class="work-info"><p class="work-status">${esc(p.status||"")}</p><h3>${esc(p.title||"")}</h3><p>${esc(p.description||"")}</p>${String(p.number)==="10"?`<a class="paper-jump" href="#project10-detail">논문 내용 바로 보기 ↓</a>`:""}<span class="work-tag">${esc(p.tag||(i===0?"PAPER · ANALYSIS":"APP · BUILD"))}</span></div>`;
     if(p.url){const a=document.createElement("a");a.href=p.url;a.target="_blank";a.rel="noopener noreferrer";a.append(article);grid.append(a);}else grid.append(article);
   });
