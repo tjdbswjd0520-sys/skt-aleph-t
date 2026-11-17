@@ -1,0 +1,7 @@
+﻿defense,target_model,static_template_asr_pct,search_attack_asr_pct_800q,source
+None,Gemini-2.5 Pro,30,100,Nasr et al. Table 7
+None,GPT-5 Mini,0,75,Nasr et al. Table 7
+Spotlighting,Gemini-2.5 Pro,28,99,Nasr et al. Table 7
+Spotlighting,GPT-5 Mini,0,47,Nasr et al. Table 7
+PIGuard,Gemini-2.5 Pro,0,71,Nasr et al. Table 7
+PIGuard,GPT-5 Mini,0,49,Nasr et al. Table 7

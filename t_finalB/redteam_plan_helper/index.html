@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>레드팀 플랜 도우미</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: 왼쪽 입력 패널(고정), 오른쪽 계획서. 좁은 화면에서는 위아래로 쌓음. */
+:root {
+  --bg: #f4f7f7;
+  --surface: #ffffff;
+  --fg: #12201f;
+  --muted: #52615f;
+  --line: #d5dedd;
+  --accent: #0b5a63;
+  --accent-fg: #ffffff;
+  --accent-soft: #dcecee;
+  --crit: #a8231b;
+  --crit-soft: #f8e3e1;
+  --rec: #0b5a63;
+  --rec-soft: #dcecee;
+  --info: #4d5b59;
+  --info-soft: #e7ecec;
+  --human: #0b5a63;
+  --auto: #b7791f;
+  --font-sans: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1516;
+    --surface: #152021;
+    --fg: #e6efee;
+    --muted: #9fb0ae;
+    --line: #2a3b3c;
+    --accent: #5cc3cf;
+    --accent-fg: #06191b;
+    --accent-soft: #17383c;
+    --crit: #ff8f86;
+    --crit-soft: #3a1c1a;
+    --rec: #5cc3cf;
+    --rec-soft: #17383c;
+    --info: #b3c2c0;
+    --info-soft: #1f2d2e;
+    --human: #5cc3cf;
+    --auto: #e6b255;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1516;
+  --surface: #152021;
+  --fg: #e6efee;
+  --muted: #9fb0ae;
+  --line: #2a3b3c;
+  --accent: #5cc3cf;
+  --accent-fg: #06191b;
+  --accent-soft: #17383c;
+  --crit: #ff8f86;
+  --crit-soft: #3a1c1a;
+  --rec: #5cc3cf;
+  --rec-soft: #17383c;
+  --info: #b3c2c0;
+  --info-soft: #1f2d2e;
+  --human: #5cc3cf;
+  --auto: #e6b255;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.65;
+  padding-block: 0 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1120px; margin: 0 auto; }
+h1, h2, h3, p { margin: 0; }
+h1, h2, h3 { text-wrap: balance; line-height: 1.3; }
+a { color: var(--accent); text-underline-offset: 3px; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+.top { padding: 40px 0 28px; border-bottom: 1px solid var(--line); margin-bottom: 28px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 10px; }
+h1 { font-size: 34px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 12px; }
+.lede { max-width: 62ch; color: var(--muted); font-size: 16px; }
+
+.grid { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 28px; align-items: start; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
+.input { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.input h2 { font-size: 17px; }
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+legend { font-weight: 600; font-size: 14px; padding: 0; margin-bottom: 4px; }
+.hint { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+.opt { display: flex; gap: 9px; align-items: flex-start; font-size: 14px; line-height: 1.45; cursor: pointer; }
+.opt input { margin-top: 3px; accent-color: var(--accent); flex: none; }
+.nums { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.nums label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; }
+.nums input {
+  font: inherit; font-family: var(--font-mono); padding: 8px 10px; border: 1px solid var(--line);
+  border-radius: 6px; background: var(--bg); color: var(--fg); width: 100%;
+}
+.presets { display: flex; flex-direction: column; gap: 8px; }
+.presets .row { display: flex; flex-wrap: wrap; gap: 8px; }
+button {
+  font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; padding: 7px 12px;
+  border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--fg);
+}
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+
+.out { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.block { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 22px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.block > h2 { font-size: 19px; }
+.sub { color: var(--muted); font-size: 13.5px; }
+
+.split { display: flex; height: 40px; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); }
+.split div { display: flex; align-items: center; padding: 0 12px; font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; }
+.split .h { background: var(--human); color: var(--accent-fg); }
+.split .a { background: var(--auto); color: #1b1303; }
+@media (prefers-reduced-motion: no-preference) { .split div { transition: width 0.35s ease; } }
+.why { margin: 0; padding-left: 18px; color: var(--muted); font-size: 13.5px; display: flex; flex-direction: column; gap: 3px; }
+.note { font-size: 12.5px; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 10px; }
+
+.phases { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.phase { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 14px; padding: 12px 0; border-top: 1px solid var(--line); }
+.phase:first-child { border-top: 0; padding-top: 0; }
+.phase .d { font-family: var(--font-mono); font-weight: 500; font-size: 15px; font-variant-numeric: tabular-nums; }
+.phase .d small { display: block; font-size: 11.5px; color: var(--muted); font-family: var(--font-sans); }
+.phase h3 { font-size: 15px; margin-bottom: 2px; }
+.phase p { font-size: 13.5px; color: var(--muted); }
+
+.cards { display: flex; flex-direction: column; gap: 14px; }
+.card { border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; background: var(--bg); min-width: 0; }
+.card header { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+.card h3 { font-size: 16px; flex: 1 1 220px; min-width: 0; }
+.pill { font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.pill.lvl-crit { background: var(--crit-soft); color: var(--crit); }
+.pill.lvl-rec { background: var(--rec-soft); color: var(--rec); }
+.pill.lvl-info { background: var(--info-soft); color: var(--info); }
+.strength { font-family: var(--font-mono); font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 1px 7px; white-space: nowrap; }
+.card p { font-size: 14.5px; }
+.ev { margin: 0; padding-left: 18px; font-size: 13.5px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+.ev .cav { color: var(--fg); }
+.refs { font-size: 12.5px; color: var(--muted); }
+.refs a { font-family: var(--font-mono); }
+
+.actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+#status { font-size: 13px; color: var(--muted); }
+#fallback { width: 100%; min-height: 160px; font-family: var(--font-mono); font-size: 12.5px; border: 1px solid var(--line); border-radius: 6px; padding: 10px; background: var(--bg); color: var(--fg); }
+
+.evidence { margin-top: 28px; display: flex; flex-direction: column; gap: 14px; }
+.evidence h2 { font-size: 19px; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; min-width: 640px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12.5px; color: var(--muted); font-weight: 600; background: var(--bg); }
+td.n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.two ul { margin: 6px 0 0; padding-left: 18px; font-size: 13.5px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+.two h3 { font-size: 15px; }
+.reflist { margin: 0; padding-left: 22px; font-size: 13.5px; display: flex; flex-direction: column; gap: 4px; }
+
+@media (max-width: 860px) {
+  .grid { grid-template-columns: minmax(0, 1fr); }
+  .input { position: static; }
+  .two { grid-template-columns: minmax(0, 1fr); }
+  h1 { font-size: 28px; }
+}
+</style>
+</head>
+<body>
+
+
+<header class="top">
+  <div class="wrap">
+    <p class="eyebrow">공개 논문 4편 기반 · 조사일 2026-11-10</p>
+    <h1>레드팀 플랜 도우미</h1>
+    <p class="lede">AI 서비스의 조건을 입력하면 「LLM 레드팀 방법론 비교 연구」가 종합한 결과를 근거로 레드팀 계획서를 만들어 줍니다. 권고마다 근거 수치와 근거 강도를 붙였습니다. 점검 권한을 받은 시스템에만 쓰세요.</p>
+  </div>
+</header>
+
+<main class="wrap grid">
+  <form id="f" class="panel input" onsubmit="return false">
+    <div class="presets">
+      <p class="hint">예시를 눌러 값을 채운 뒤 바꿔 보세요.</p>
+      <div class="row">
+        <button type="button" data-preset="chat">상담 챗봇</button>
+        <button type="button" data-preset="agent">업무 에이전트</button>
+        <button type="button" data-preset="rag">문서 검색(RAG)</button>
+      </div>
+    </div>
+
+    <fieldset>
+      <legend>1. 무엇을 점검하나요</legend>
+      <label class="opt"><input type="radio" name="target" value="chat" id="t-chat" checked> 대화형 챗봇</label>
+      <label class="opt"><input type="radio" name="target" value="agent" id="t-agent"> 도구를 호출하는 AI 에이전트</label>
+      <label class="opt"><input type="radio" name="target" value="rag" id="t-rag"> 문서·검색 결과를 읽는 서비스</label>
+    </fieldset>
+
+    <fieldset>
+      <legend>2. 지금 쓰는 방어 장치</legend>
+      <label class="opt"><input type="checkbox" id="d-prompt"> 시스템 프롬프트 지침, 구분자 같은 프롬프트 방식</label>
+      <label class="opt"><input type="checkbox" id="d-filter"> 입력·출력을 걸러 주는 탐지 모델(필터)</label>
+      <label class="opt"><input type="checkbox" id="d-train"> 공격 사례를 학습시킨 안전 훈련 모델</label>
+      <p class="hint">아무것도 고르지 않으면 방어 장치가 없는 상태로 계산합니다.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>3. 지금까지 해 본 평가</legend>
+      <label class="opt"><input type="checkbox" id="e-static"> 공개 벤치마크나 고정된 공격 목록</label>
+      <label class="opt"><input type="checkbox" id="e-auto"> 자동 공격 도구</label>
+      <label class="opt"><input type="checkbox" id="e-human"> 사람이 직접 하는 레드팀</label>
+    </fieldset>
+
+    <fieldset>
+      <legend>4. 주로 찾으려는 약점의 성격</legend>
+      <label class="opt"><input type="radio" name="task" value="search" id="k-search"> 문구·형식을 바꿔 많이 시도하면 드러나는 약점</label>
+      <label class="opt"><input type="radio" name="task" value="creative" id="k-creative"> 상황 설정이나 맥락을 바꿔야 드러나는 약점</label>
+      <label class="opt"><input type="radio" name="task" value="both" id="k-both" checked> 둘 다</label>
+    </fieldset>
+
+    <fieldset>
+      <legend>5. 질의 예산과 대상 모델</legend>
+      <label class="opt"><input type="radio" name="budget" value="s" id="b-s"> 작음: 약 500회까지</label>
+      <label class="opt"><input type="radio" name="budget" value="m" id="b-m" checked> 보통: 약 5,000회까지</label>
+      <label class="opt"><input type="radio" name="budget" value="l" id="b-l"> 큼: 5만 회 이상</label>
+      <label class="opt"><input type="radio" name="models" value="one" id="m-one" checked> 대상 모델 1개</label>
+      <label class="opt"><input type="radio" name="models" value="many" id="m-many"> 대상 모델 여러 개</label>
+    </fieldset>
+
+    <div class="nums">
+      <label for="people">사람 수
+        <input id="people" type="number" min="1" max="20" value="2" inputmode="numeric">
+      </label>
+      <label for="days">기간(일)
+        <input id="days" type="number" min="1" max="60" value="10" inputmode="numeric">
+      </label>
+    </div>
+  </form>
+
+  <section id="out" class="out" aria-live="polite"></section>
+</main>
+
+<section class="wrap evidence" id="evidence">
+  <h2>근거 자료와 한계</h2>
+  <p class="sub">앱의 권고는 아래 수치에서 나옵니다. 연구마다 성공률의 정의와 대상 모델이 달라 서로 다른 연구의 수치는 빼거나 평균내지 않았습니다.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>연구</th><th>핵심 수치</th><th>조건</th><th>논문 판정</th></tr></thead>
+      <tbody>
+        <tr><td><a href="https://arxiv.org/abs/2504.19855" target="_blank" rel="noopener">[7] Mulla 외, 2025</a></td><td class="n">69.5% 대 47.6%</td><td>Crucible 30개 과제, 자동화를 쓴 쪽 대 수동만 쓴 쪽, 시도 214,271건</td><td>H1 부분 지지</td></tr>
+        <tr><td><a href="https://arxiv.org/abs/2510.09023" target="_blank" rel="noopener">[9] Nasr 외, 2025</a></td><td class="n">거의 0% → 90% 초과</td><td>방어 12종, 정적 평가 대 적응형 공격(프리프린트, 심사 중)</td><td>H2 부분 지지</td></tr>
+        <tr><td><a href="https://arxiv.org/abs/2510.09023" target="_blank" rel="noopener">[9] Nasr 외, 2025</a></td><td class="n">100% 대 69%</td><td>겹치는 29개 시나리오, 사람 참가자 전체 대 탐색 공격(800질의, 1회 시행)</td><td>H3 지지</td></tr>
+        <tr><td><a href="https://arxiv.org/abs/2502.09638" target="_blank" rel="noopener">[6] Kritz 외, 2025</a></td><td class="n">98.0 / 93.0 / 88.7%</td><td>HarmBench, GPT-4o 대상: 인간 / LLM 레드팀 / 최고 알고리즘</td><td>H3 지지</td></tr>
+        <tr><td><a href="https://arxiv.org/abs/2502.09638" target="_blank" rel="noopener">[6] Kritz 외, 2025</a></td><td class="n">93.0% 대 24.0%</td><td>같은 공격(J2 Gemini), 대상이 GPT-4o일 때와 Sonnet-3.5일 때</td><td>참고</td></tr>
+        <tr><td><a href="https://arxiv.org/abs/2507.20526" target="_blank" rel="noopener">[8] Zou 외, 2025</a></td><td class="n">10~100질의</td><td>에이전트 22종, 대부분의 정책 위반이 이 안에 발생(초록 기준)</td><td>참고</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="two">
+    <div>
+      <h3>이 앱이 하지 않는 것</h3>
+      <ul>
+        <li>공격 프롬프트나 실행 절차를 만들거나 보여 주지 않습니다. 계획과 평가 설계만 돕습니다.</li>
+        <li>논문이 제시한 최적 비율을 계산하지 않습니다. 권고 비율은 결과의 방향을 옮긴 설계 규칙입니다.</li>
+        <li>점검 허가를 받지 않은 시스템을 대상으로 쓰는 것을 전제하지 않습니다.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>논문의 한계(앱에도 그대로 적용)</h3>
+      <ul>
+        <li>직접 실험 없이 공개 결과를 종합한 2차 분석이며 인과를 주장하지 않습니다.</li>
+        <li>가설 검증은 4편에 의존하고, H1·H2는 직접 비교한 연구가 한 편뿐입니다.</li>
+        <li>선정 논문은 모두 2025년에 공개됐고 대상 모델의 세대가 연구마다 다릅니다.</li>
+        <li>[9]는 심사 중인 프리프린트이고, [8]은 초록만 확인했습니다.</li>
+      </ul>
+    </div>
+  </div>
+  <h3>참고문헌</h3>
+  <ol class="reflist" id="reflist"></ol>
+</section>
+
+<script>
+(function () {
+  var REFS = {
+    1: ["Bullwinkel 외 (2025). Lessons From Red Teaming 100 Generative AI Products.", "https://arxiv.org/abs/2501.07238"],
+    2: ["Lin 외 (2025). Against The Achilles' Heel: A Survey on Red Teaming for Generative Models. JAIR 82.", "https://doi.org/10.1613/jair.1.17654"],
+    3: ["Purpura 외 (2025). Building Safe GenAI Applications: An End-to-End Overview of Red Teaming for LLMs.", "https://arxiv.org/abs/2503.01742"],
+    4: ["Jabbar 외 (2025). Red teaming large language models: A comprehensive review and critical analysis. IPM 62(6).", "https://doi.org/10.1016/j.ipm.2025.104239"],
+    5: ["Beutel 외 (2024). Diverse and Effective Red Teaming with Auto-generated Rewards and Multi-step RL.", "https://arxiv.org/abs/2412.18693"],
+    6: ["Kritz 외 (2025). Jailbreaking to Jailbreak.", "https://arxiv.org/abs/2502.09638"],
+    7: ["Mulla 외 (2025). The Automation Advantage in AI Red Teaming.", "https://arxiv.org/abs/2504.19855"],
+    8: ["Zou 외 (2025). Security Challenges in AI Agent Deployment: Insights from a Large Scale Public Competition.", "https://arxiv.org/abs/2507.20526"],
+    9: ["Nasr 외 (2025). The Attacker Moves Second: Stronger Adaptive Attacks Bypass Defenses Against LLM Jailbreaks and Prompt Injections. (프리프린트)", "https://arxiv.org/abs/2510.09023"],
+    10: ["Dawson 외 (2025). AIRTBench: Measuring Autonomous AI Red Teaming Capabilities in Language Models.", "https://arxiv.org/abs/2506.14682"]
+  };
+  var LEVEL = { crit: "우선 조치", rec: "권장", info: "참고" };
+  var LEVEL_ORDER = { crit: 0, rec: 1, info: 2 };
+
+  var PRESETS = {
+    chat:  { target: "chat",  d: ["prompt", "filter"], e: ["static"],          task: "creative", budget: "m", models: "one",  people: 2, days: 10 },
+    agent: { target: "agent", d: ["filter", "train"],  e: ["static", "auto"],   task: "both",     budget: "l", models: "many", people: 4, days: 21 },
+    rag:   { target: "rag",   d: ["prompt"],           e: [],                   task: "search",   budget: "s", models: "one",  people: 1, days: 7 }
+  };
+
+  function $(id) { return document.getElementById(id); }
+  function radio(name) {
+    var el = document.querySelector('input[name="' + name + '"]:checked');
+    return el ? el.value : null;
+  }
+  function num(id, lo, hi, dflt) {
+    var v = parseInt($(id).value, 10);
+    if (isNaN(v)) v = dflt;
+    return Math.max(lo, Math.min(hi, v));
+  }
+  function readState() {
+    return {
+      target: radio("target"), task: radio("task"), budget: radio("budget"), models: radio("models"),
+      dPrompt: $("d-prompt").checked, dFilter: $("d-filter").checked, dTrain: $("d-train").checked,
+      eStatic: $("e-static").checked, eAuto: $("e-auto").checked, eHuman: $("e-human").checked,
+      people: num("people", 1, 20, 2), days: num("days", 1, 60, 10)
+    };
+  }
+  function applyPreset(key) {
+    var p = PRESETS[key];
+    $("t-" + p.target).checked = true;
+    $("d-prompt").checked = p.d.indexOf("prompt") >= 0;
+    $("d-filter").checked = p.d.indexOf("filter") >= 0;
+    $("d-train").checked = p.d.indexOf("train") >= 0;
+    $("e-static").checked = p.e.indexOf("static") >= 0;
+    $("e-auto").checked = p.e.indexOf("auto") >= 0;
+    $("e-human").checked = p.e.indexOf("human") >= 0;
+    $("k-" + p.task).checked = true;
+    $("b-" + p.budget).checked = true;
+    $("m-" + p.models).checked = true;
+    $("people").value = p.people;
+    $("days").value = p.days;
+    render();
+  }
+
+  /* 사람/자동 구성비: 논문의 결과 방향을 옮긴 규칙. 최적 비율이 아님. */
+  function split(s) {
+    var auto = { search: 65, creative: 35, both: 50 }[s.task];
+    var why = [];
+    if (s.task === "search") why.push("반복 탐색형 약점이라 자동 비중을 높였습니다. [7]에서 체계적 탐색이 필요한 과제에 자동화가 유리했습니다.");
+    if (s.task === "creative") why.push("맥락을 바꾸는 약점이라 사람 비중을 높였습니다. [7]은 창의적 추론 과제에서 수동이 유리한 경우가 있었다고 서술합니다.");
+    if (s.task === "both") why.push("두 성격이 섞여 있어 5:5에서 시작했습니다.");
+    if (s.budget === "s") { auto -= 15; why.push("질의 예산이 작아 자동 비중을 15%p 낮췄습니다. 자동 세션은 평균 472.5회, 수동 세션은 8.0회를 시도했습니다 [7]."); }
+    if (s.budget === "l") { auto += 10; why.push("질의 예산이 커서 자동 비중을 10%p 높였습니다."); }
+    if (s.people <= 1) { auto += 10; why.push("사람이 1명이라 자동 비중을 10%p 높였습니다."); }
+    if (s.people >= 4) { auto -= 10; why.push("사람이 4명 이상이라 사람 비중을 10%p 높였습니다."); }
+    auto = Math.max(20, Math.min(80, auto));
+    return { auto: auto, human: 100 - auto, why: why };
+  }
+
+  /* 일정: 0.5일 단위, 합이 입력한 기간과 같도록 배분 */
+  function schedule(s, sp) {
+    var hasDef = s.dPrompt || s.dFilter || s.dTrain;
+    var items = [
+      { key: "prep", name: "예비 시험", w: 0.10, desc: "배포하는 모델 하나에서 소규모로 시험해 성공 판정 기준과 기록 방식을 확정합니다. 모델이 바뀌면 결과가 달라질 수 있어 본 시험 전에 필요합니다 [6]." }
+    ];
+    var adaptive = hasDef ? 0.20 : 0;
+    var review = 0.10;
+    var rest = 1 - 0.10 - adaptive - review;
+    items.push({ key: "human", name: "사람 전략 탐색", w: rest * sp.human / 100, desc: s.people >= 3 ? "사람마다 다른 전략을 맡겨 병렬로 시도합니다. 단순한 기법부터 시도합니다 [1]." : "단순한 기법부터 시도하고 통한 방향을 기록합니다 [1]." });
+    items.push({ key: "auto", name: "자동 확장", w: rest * sp.auto / 100, desc: "사람이 찾은 방향의 변형을 스크립트로 대량 시도합니다. 자동 도구의 성공 판정은 샘플로 사람이 확인합니다 [9]." });
+    if (hasDef) items.push({ key: "adapt", name: "적응형 방어 평가", w: adaptive, desc: "방어 장치 설계를 알고 거기에 맞춰 공격을 고쳐 가며 시험합니다. 고정 공격 목록만으로는 부족합니다 [9]." });
+    items.push({ key: "review", name: "판정 검토와 정리", w: review, desc: "자동 판정 결과를 사람이 다시 보고, 성공한 공격 유형과 대응안을 정리합니다." });
+    var units = s.days * 2, used = 0, i;
+    for (i = 0; i < items.length; i++) { items[i].raw = items[i].w * units; items[i].u = Math.floor(items[i].raw); used += items[i].u; }
+    var order = items.slice().sort(function (a, b) { return (b.raw - b.u) - (a.raw - a.u); });
+    var left = units - used, j = 0;
+    while (left > 0) { order[j % order.length].u += 1; left--; j++; }
+    for (i = 0; i < items.length; i++) items[i].days = items[i].u / 2;
+    return items;
+  }
+
+  function cards(s) {
+    var list = [];
+    var hasDef = s.dPrompt || s.dFilter || s.dTrain;
+    var protectedByHumanOrAuto = s.eAuto || s.eHuman;
+
+    if (s.eStatic) {
+      list.push({
+        lvl: protectedByHumanOrAuto ? "rec" : "crit", strength: "부분 지지 (H2)", refs: [9],
+        title: "고정 공격 모음의 결과만으로 안전하다고 판단하지 마세요",
+        body: "공개된 고정 공격 목록으로 잰 성공률은 실제 위험보다 낮게 나올 수 있습니다. 방어 장치에 맞춰 공격을 고쳐 가며 시험하는 적응형 평가를 계획에 넣으세요.",
+        ev: ["[9] 최근 방어 12종 대부분이 원 논문에서는 공격 성공률이 거의 0%로 보고됐지만, 적응형 공격에서는 대부분 90%를 넘었습니다.", "[9] AgentDojo 실험에서 방어가 없는 Gemini-2.5 Pro의 성공률은 정적 템플릿 공격 30%, 탐색 공격 100%였습니다."],
+        cav: "정적 평가와 적응형 평가를 직접 비교한 연구는 [9] 한 편이며 프리프린트입니다."
+      });
+    }
+    if (s.dPrompt) {
+      list.push({
+        lvl: "rec", strength: "부분 지지 (H2)", refs: [9],
+        title: "프롬프트 지침만으로 막는 방어는 적응형 공격에 약했습니다",
+        body: "시스템 프롬프트 지침이나 구분자 방식은 다른 방어와 함께 쓰고, 단독 방어로 두지 마세요.",
+        ev: ["[9] Spotlighting과 Prompt Sandwiching에 대한 탐색 공격 성공률이 Gemini-2.5 Pro 조합에서 각각 99%, 95%였습니다(정적 공격은 28%, 21%).", "[9] 저자들은 방어 적용 전후에 성공하는 공격 유형에서 측정 가능한 차이를 보지 못했다고 서술합니다."],
+        cav: "모델 조합에 따라 편차가 큽니다. GPT-5 Mini 조합은 47~69%였습니다."
+      });
+    }
+    if (s.dFilter) {
+      list.push({
+        lvl: "rec", strength: "부분 지지 (H2)", refs: [9],
+        title: "탐지 모델(필터)은 단독 방어로 두지 마세요",
+        body: "필터는 허술한 공격을 막는 데는 쓸모가 있습니다. 다만 적응형 공격에 맞서는 마지막 방어선으로 믿지 말고, 필터를 켠 상태로 평가하세요.",
+        ev: ["[9] Protect AI, PromptGuard, Model Armor에는 탐색 공격 성공률이 90%를 넘었고 PIGuard는 71%였습니다.", "[9] 저자들은 필터가 비정교한 공격을 막는 데는 유용하다고도 평가합니다."],
+        cav: "정확도 대신 오탐률과 서비스 품질 영향도 함께 보세요."
+      });
+    }
+    if (s.dTrain) {
+      list.push({
+        lvl: "rec", strength: "부분 지지 (H2)", refs: [9],
+        title: "공격 사례를 학습시킨 모델도 새로운 공격에는 약할 수 있습니다",
+        body: "학습에 쓰지 않은 방식의 공격을 따로 만들어 시험하세요.",
+        ev: ["[9] 강화학습 기반 공격이 Circuit Breakers에 HarmBench 성공률 100%를 보였습니다.", "[9] MetaSecAlign의 성공률은 정적 AgentDojo 2%, 탐색 공격 96%였습니다."],
+        cav: "학습 계열 방어는 각 방어의 원 논문 평가와 비교해서 읽어야 합니다."
+      });
+    }
+    if (s.target === "agent" || s.target === "rag") {
+      list.push({
+        lvl: "rec", strength: "참고", refs: [8],
+        title: s.target === "agent" ? "에이전트는 모델이 크다고 안전하다고 가정하지 마세요" : "문서와 검색 결과에 숨은 지시도 시험 범위에 넣으세요",
+        body: s.target === "agent"
+          ? "도구 호출이 있는 서비스는 사용자 입력뿐 아니라 도구가 돌려준 데이터를 통한 공격까지 시험해야 합니다. 모델의 크기나 최신성을 방어의 근거로 삼지 마세요."
+          : "서비스가 읽어 들이는 문서, 웹 페이지, 도구 결과 안에 지시를 숨기는 간접 공격까지 시험 시나리오에 넣으세요.",
+        ev: ["[8] 에이전트 22종을 대상으로 한 공개 대회에서 공격 180만 건이 제출됐고 6만 건 넘게 정책 위반을 유도했습니다.", "[8] 거의 모든 에이전트가 대부분의 위반 유형에서 10~100질의 안에 뚫렸고, 모델 크기·능력·추론 연산량과 강건성의 상관은 제한적이었습니다."],
+        cav: "[8]은 초록 수준으로만 확인했습니다."
+      });
+    }
+    list.push({
+      lvl: "rec", strength: "지지 (H3)", refs: [6, 9],
+      title: "사람은 전략을 찾는 일에 배치하세요",
+      body: "적은 질의로 새로운 접근을 찾는 일은 사람이 강했습니다. 사람이 찾은 방향을 자동화로 넓히는 순서로 계획했습니다.",
+      ev: ["[9] 겹치는 29개 시나리오에서 사람 참가자 전체는 모든 시나리오에서 성공(100%)했고, 탐색 공격은 800질의에서 69%였습니다. 가장 성적이 좋은 개인은 75%였습니다.", "[6] HarmBench에서 GPT-4o를 대상으로 인간 98.0%, LLM 레드팀 93.0%, 최고 알고리즘 88.7%였습니다."],
+      cav: "[9]는 참가자가 많은데 탐색 공격은 1회만 시행했고, 참가자마다 노력이 달라 비교에 한계가 있다고 밝힙니다."
+    });
+    list.push({
+      lvl: "rec", strength: "부분 지지 (H1)", refs: [7],
+      title: "자동화는 많은 시도가 필요한 구간에 쓰세요",
+      body: "자동화를 쓴 쪽의 성공률이 더 높았습니다. 다만 쉬운 과제는 사람이 더 빨리 풀었고, 자동화는 어려운 과제에 몰려 쓰였다는 점을 감안해 비중을 정했습니다.",
+      ev: ["[7] 자동화를 쓴 사용자·과제 쌍의 성공률은 69.5%, 수동만 쓴 쌍은 47.6%였습니다(차이 21.8%p).", "[7] 자동 세션은 평균 472.5회, 수동 세션은 8.0회를 시도했습니다."],
+      cav: "어려운 과제일수록 자동화를 택하는 선택 편향이 있었고, 한 플랫폼의 데이터입니다."
+    });
+    if (s.task === "creative" || s.task === "both") {
+      list.push({
+        lvl: "info", strength: "참고", refs: [6, 7],
+        title: "맥락을 바꾸는 접근은 사람 몫으로 남기세요",
+        body: "허구 설정이나 역할극처럼 상황을 바꾸는 접근은 사람이 더 잘 찾는다고 서술됩니다.",
+        ev: ["[6] 저자들은 사람이 허구화 같은 프레이밍 전략을 잘 탐색한다고 서술합니다.", "[7] 창의적 추론이 필요한 과제에서 수동이 낫거나 더 빨랐던 경우가 있었습니다."],
+        cav: "관찰된 사례를 저자들이 해석한 것이며 본 연구가 검증한 결과가 아닙니다."
+      });
+    }
+    if (s.people >= 3) {
+      list.push({
+        lvl: "info", strength: "참고", refs: [9],
+        title: "사람이 여럿이면 서로 다른 전략을 나눠 병렬로 시도하세요",
+        body: "한 명이 한 전략을 끝까지 파는 것보다 사람마다 다른 전략을 맡기는 편이 적용 범위를 넓힙니다.",
+        ev: ["[9] 사람 집단의 100%는 여러 참가자가 독립적으로 시도해 한 명이라도 성공하면 성공으로 센 값입니다."],
+        cav: "집단 성공률은 개인 성공률보다 높게 나오는 방식이라 그대로 개인에게 기대하면 안 됩니다."
+      });
+    }
+    list.push({
+      lvl: "info", strength: "참고", refs: [6],
+      title: s.models === "many" ? "모델마다 따로 측정하고 결과를 옮겨 적지 마세요" : "다른 모델의 결과를 우리 모델의 결과로 옮겨 적지 마세요",
+      body: "같은 공격도 대상 모델에 따라 결과가 크게 달라졌습니다. 일정에 예비 시험 구간을 둔 이유입니다.",
+      ev: ["[6] 같은 J2(Gemini) 공격이 GPT-4o에서는 93.0%, Sonnet-3.5에서는 24.0%였습니다."],
+      cav: "한 연구의 한 조합이며 대상 모델 세대가 지금과 다를 수 있습니다."
+    });
+    list.push({
+      lvl: "info", strength: "참고", refs: [6, 9],
+      title: "공격 성공 판정을 자동 평가자에게만 맡기지 마세요",
+      body: "자동으로 판정하더라도 성공으로 표시된 사례는 사람이 표본을 뽑아 확인하세요.",
+      ev: ["[9] 자동 평가 모델도 속거나 점수만 올리는 방식으로 악용될 수 있다고 지적하고, 저자들은 모든 공격을 직접 확인했다고 밝힙니다.", "[6] 공격 모델의 자가 판정은 오탐이 많아 외부 판정기를 추가했습니다."],
+      cav: "각 연구 내부의 실무 경험에 근거한 서술입니다."
+    });
+    if (!hasDef) {
+      list.push({
+        lvl: "info", strength: "참고", refs: [9],
+        title: "방어 장치가 없으면 기준선부터 재세요",
+        body: "먼저 방어 없는 상태의 성공률을 기록하고, 이후 방어를 하나 추가할 때마다 같은 평가를 반복해 변화를 비교하세요.",
+        ev: ["[9] 같은 시나리오를 방어 유무로 나눠 비교하는 방식으로 방어의 효과를 측정했습니다."],
+        cav: "평가 설계에 대한 일반 권고입니다."
+      });
+    }
+    list.push({
+      lvl: "info", strength: "참고", refs: [1],
+      title: "정교한 기법보다 단순한 시도부터 하세요",
+      body: "처음부터 복잡한 도구를 쓰기보다 단순한 접근을 먼저 시험해 보세요.",
+      ev: ["[1] Microsoft는 100개 넘는 생성형 AI 제품을 점검한 경험에서 단순한 기법이 정교한 기울기 기반 공격만큼, 때로는 더 잘 통했다고 정리합니다."],
+      cav: "요약과 초록 수준으로만 확인했습니다."
+    });
+    list.sort(function (a, b) { return LEVEL_ORDER[a.lvl] - LEVEL_ORDER[b.lvl]; });
+    return list;
+  }
+
+  function refLinks(refs) {
+    return refs.map(function (n) { return '<a href="' + REFS[n][1] + '" target="_blank" rel="noopener">[' + n + ']</a>'; }).join(" ");
+  }
+  function esc(t) { return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+  var lastText = "";
+  function render() {
+    var s = readState();
+    var sp = split(s);
+    var sch = schedule(s, sp);
+    var cs = cards(s);
+    var targetName = { chat: "대화형 챗봇", agent: "도구를 호출하는 AI 에이전트", rag: "문서·검색 결과를 읽는 서비스" }[s.target];
+
+    var html = '';
+    html += '<div class="block"><h2>권고 구성: 사람 ' + sp.human + ' : 자동 ' + sp.auto + '</h2>';
+    html += '<div class="split" role="img" aria-label="사람 ' + sp.human + '퍼센트, 자동 ' + sp.auto + '퍼센트"><div class="h" style="width:' + sp.human + '%">사람 ' + sp.human + '%</div><div class="a" style="width:' + sp.auto + '%">자동 ' + sp.auto + '%</div></div>';
+    html += '<ul class="why">' + sp.why.map(function (w) { return '<li>' + esc(w) + '</li>'; }).join('') + '</ul>';
+    html += '<p class="note">이 비율은 논문이 제시한 최적값이 아니라, 사람은 전략 탐색에 강하고 자동화는 시도 규모에 강하다는 결과의 방향을 옮긴 설계 규칙입니다. 상황에 맞게 조정하세요.</p></div>';
+
+    html += '<div class="block"><h2>일정: 총 ' + s.days + '일</h2><ol class="phases">';
+    var skipped = 0;
+    sch.forEach(function (p) {
+      if (p.days === 0) { skipped++; return; }
+      html += '<li class="phase"><div class="d">' + p.days + '일<small>' + Math.round(p.days / s.days * 100) + '%</small></div><div><h3>' + esc(p.name) + '</h3><p>' + esc(p.desc) + '</p></div></li>';
+    });
+    html += '</ol>';
+    if (skipped) html += '<p class="note">기간이 짧아 ' + skipped + '개 단계는 일정에서 뺐습니다. 해당 작업은 다른 단계 안에서 함께 진행하세요.</p>';
+    html += '</div>';
+
+    html += '<div class="block"><h2>권고와 근거 (' + cs.length + '개)</h2><p class="sub">배지의 근거 강도는 논문의 가설 판정을 따릅니다. 참고는 한 연구의 관찰이며 가설 검증 결과가 아닙니다.</p><div class="cards">';
+    cs.forEach(function (c) {
+      html += '<article class="card"><header><span class="pill lvl-' + c.lvl + '">' + LEVEL[c.lvl] + '</span><h3>' + esc(c.title) + '</h3><span class="strength">' + esc(c.strength) + '</span></header>';
+      html += '<p>' + esc(c.body) + '</p><ul class="ev">' + c.ev.map(function (e) { return '<li>' + esc(e) + '</li>'; }).join('') + '<li class="cav">주의: ' + esc(c.cav) + '</li></ul>';
+      html += '<p class="refs">출처 ' + refLinks(c.refs) + '</p></article>';
+    });
+    html += '</div></div>';
+
+    html += '<div class="block"><h2>계획서 내보내기</h2><div class="actions"><button type="button" class="primary" id="copy">계획서 텍스트 복사</button><span id="status" role="status"></span></div><textarea id="fallback" readonly hidden aria-label="계획서 텍스트"></textarea></div>';
+
+    $("out").innerHTML = html;
+
+    var t = [];
+    t.push("레드팀 계획서");
+    t.push("점검 대상: " + targetName + " / 기간 " + s.days + "일 / 사람 " + s.people + "명");
+    t.push("권고 구성: 사람 " + sp.human + "% : 자동 " + sp.auto + "%");
+    t.push("");
+    t.push("[일정]");
+    sch.forEach(function (p) { t.push("- " + p.name + " " + p.days + "일: " + p.desc); });
+    t.push("");
+    t.push("[권고와 근거]");
+    cs.forEach(function (c, i) {
+      t.push((i + 1) + ". (" + LEVEL[c.lvl] + ", " + c.strength + ") " + c.title);
+      t.push("   " + c.body);
+      c.ev.forEach(function (e) { t.push("   - " + e); });
+      t.push("   - 주의: " + c.cav);
+    });
+    t.push("");
+    t.push("[한계] 공개된 논문 결과를 종합한 2차 분석에 근거한 권고이며, 연구마다 지표와 대상 모델이 달라 수치를 직접 비교하지 않았습니다. 점검 권한을 받은 시스템에만 적용하세요.");
+    t.push("[참고문헌]");
+    [1, 6, 7, 8, 9].forEach(function (n) { t.push("[" + n + "] " + REFS[n][0] + " " + REFS[n][1]); });
+    lastText = t.join("\n");
+
+    $("copy").addEventListener("click", copyPlan);
+  }
+
+  function copyPlan() {
+    var status = $("status"), fb = $("fallback");
+    function fallback() {
+      fb.hidden = false; fb.value = lastText; fb.focus(); fb.select();
+      status.textContent = "자동 복사가 막혀 있어 텍스트를 선택해 두었습니다. 직접 복사하세요.";
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(lastText).then(function () { status.textContent = "복사했습니다."; }, fallback);
+      } else { fallback(); }
+    } catch (e) { fallback(); }
+  }
+
+  var rl = $("reflist"), k;
+  for (k = 1; k <= 10; k++) {
+    var li = document.createElement("li");
+    li.innerHTML = esc(REFS[k][0]) + ' <a href="' + REFS[k][1] + '" target="_blank" rel="noopener">링크</a>';
+    rl.appendChild(li);
+  }
+  $("f").addEventListener("input", render);
+  $("f").addEventListener("change", render);
+  Array.prototype.forEach.call(document.querySelectorAll("[data-preset]"), function (b) {
+    b.addEventListener("click", function () { applyPreset(b.getAttribute("data-preset")); });
+  });
+  applyPreset("chat");
+})();
+</script>
+
+</body>
+</html>

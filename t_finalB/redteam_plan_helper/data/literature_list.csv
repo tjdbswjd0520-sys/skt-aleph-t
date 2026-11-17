@@ -1,0 +1,11 @@
+﻿ref_no,authors,year,title,venue,url,role_in_paper,checked_scope
+1,Bullwinkel et al.,2025,Lessons From Red Teaming 100 Generative AI Products,arXiv:2501.07238 (NeurIPS 2024 Workshop Red_Teaming_GenAI),https://arxiv.org/abs/2501.07238,background,abstract/landing page
+2,Lin et al.,2025,Against The Achilles' Heel: A Survey on Red Teaming for Generative Models,"JAIR 82, 687-775",https://doi.org/10.1613/jair.1.17654,background,"abstract/landing page (arXiv v1 2024-03, JAIR published 2025-02)"
+3,Purpura et al.,2025,Building Safe GenAI Applications: An End-to-End Overview of Red Teaming for LLMs,"TrustNLP 2025, 335-350",https://arxiv.org/abs/2503.01742,background,abstract/landing page
+4,"Jabbar, Al-Azani, Alotaibi, Ahmed",2025,Red teaming large language models: A comprehensive review and critical analysis,"Information Processing and Management 62(6), 104239",https://doi.org/10.1016/j.ipm.2025.104239,background,abstract/bibliographic page
+5,"Beutel, Xiao, Heidecke, Weng",2024,Diverse and Effective Red Teaming with Auto-generated Rewards and Multi-step RL,arXiv:2412.18693,https://arxiv.org/abs/2412.18693,background,abstract/landing page
+6,Kritz et al.,2025,Jailbreaking to Jailbreak,arXiv:2502.09638,https://arxiv.org/abs/2502.09638,hypothesis test (H3),"body text (first 100,000 of 102,200 characters; appendix tail not read)"
+7,Mulla et al.,2025,The Automation Advantage in AI Red Teaming,arXiv:2504.19855,https://arxiv.org/abs/2504.19855,"hypothesis test (H1, H3)",full body text
+8,Zou et al.,2025,Security Challenges in AI Agent Deployment: Insights from a Large Scale Public Competition,arXiv:2507.20526 (NeurIPS 2025 D&B),https://arxiv.org/abs/2507.20526,"hypothesis test (H2, supporting)",abstract page only
+9,Nasr et al.,2025,The Attacker Moves Second: Stronger Adaptive Attacks Bypass Defenses Against LLM Jailbreaks and Prompt Injections,"arXiv:2510.09023 (preprint, under review)",https://arxiv.org/abs/2510.09023,"hypothesis test (H2, H3)","body text (first 100,000 of 105,107 characters; appendix tail not read)"
+10,"Dawson, Mulla, Landers, Caldwell",2025,AIRTBench: Measuring Autonomous AI Red Teaming Capabilities in Language Models,arXiv:2506.14682,https://arxiv.org/abs/2506.14682,background,abstract snippet via search result

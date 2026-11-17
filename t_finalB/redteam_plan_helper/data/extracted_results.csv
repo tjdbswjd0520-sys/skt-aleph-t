@@ -1,0 +1,30 @@
+﻿id,ref_no,metric,value,unit,condition,note
+M1,7,attack_attempts,214271,count,"Crucible, 30 LLM challenges",
+M2,7,users,1674,count,,
+M3,7,success_rate_automation_used,69.5,%,user/challenge pairs using any automation,pure automation + hybrid
+M4,7,success_rate_manual,47.6,%,"user/challenge pairs, manual only",
+M5,7,success_rate_pure_automation,76.9,%,,
+M6,7,success_rate_hybrid,63.1,%,,
+M7,7,pairs_pure_automation,160,count,,
+M8,7,pairs_hybrid,187,count,,
+M9,7,pairs_any_automation,347,count,,
+M10,7,attempts_per_session_automated,472.5,count,,
+M11,7,attempts_per_session_manual,8.0,count,,
+M12,7,median_solve_time_manual,1.5,min,successful attempts only,selection bias noted by authors
+M13,7,median_solve_time_automated,11.6,min,successful attempts only,
+M14,7,reported_manual_speed_ratio,5.2,x,author-reported,does not equal M13/M12; see analysis.py
+K1,6,asr_human_gpt4o,98.0,%,"HarmBench 200 standard behaviors, target GPT-4o",
+K2,6,asr_J2_gemini_gpt4o,93.0,%,same,
+K3,6,asr_best_algorithm_BoN_gpt4o,88.7,%,same,author-cited value on 159-behavior split
+K4,6,asr_J2_gemini_gpt4o_table2,93.0,%,Table 2,
+K5,6,asr_J2_gemini_sonnet35,24.0,%,"Table 2, target Sonnet-3.5",
+N1,9,defenses_evaluated,12,count,,
+N2,9,scenarios_human_vs_search,29,count,AgentDojo overlap,
+N3,9,human_collective_asr,100,%,any participant succeeds,
+N4,9,search_attack_asr_800q,69,%,"800 queries, single run",
+N5,9,best_participant_asr,75,%,29 scenarios,
+N6,9,min_queries_best_participant,50,count,author: as few as,
+Z1,8,attacks_collected,1800000,count,public competition,
+Z2,8,agents_targeted,22,count,,
+Z3,8,deployment_scenarios,44,count,,
+Z4,8,queries_to_policy_violation,10-100,count,most agents,abstract
